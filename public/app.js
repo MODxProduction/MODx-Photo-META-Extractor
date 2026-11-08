@@ -1,5 +1,5 @@
 /* ============================================================
-   PhotoShield Pro - Advanced Metadata & OSINT Engine
+   PhotoShield Pro - Advanced OSINT, EXIF & Geolocation Engine
    ============================================================ */
 
 const MAX_FILES = 20;
@@ -35,7 +35,7 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
 });
 
 // ==========================================
-// 1. FILE HANDLING & EXTRACTION
+// 1. FILE HANDLING & DEEP EXTRACTION
 // ==========================================
 async function handleFiles(fileList) {
   const files = Array.from(fileList).slice(0, MAX_FILES);
@@ -49,17 +49,17 @@ async function handleFiles(fileList) {
 
   for (const file of files) {
     try {
-      // Max extraction using exifr
+      // ICC (Color Profiles) ko band kar diya taaki raw bytes na aayein
       const data = await exifr.parse(file, {
-        tiff: true, exif: true, gps: true, iptc: true, xmp: true, icc: true,
-        jfif: true, ihdr: true, ifd0: true, ifd1: true, interop: true,
+        tiff: true, exif: true, gps: true, iptc: true, xmp: true, icc: false,
+        jfif: false, ihdr: true, ifd0: true, ifd1: true, interop: true,
         makerNote: true, userComment: true, skip: [], 
         mergeOutput: true, translateKeys: true, translateValues: true, reviveValues: true
       }) || {};
       
       state.metadata.push({ name: file.name, data });
       
-      // OSINT: Generate Hashes
+      // OSINT: Hashes Generate karein
       const sha256 = await generateHashes(file);
       renderOSINT(data, sha256);
       
@@ -73,7 +73,7 @@ async function handleFiles(fileList) {
 }
 
 // ==========================================
-// 2. ADVANCED METADATA RENDERING (UI)
+// 2. SMART METADATA UI (Human-Readable)
 // ==========================================
 function analyzeImageType(md) {
   const make = md.Make || md.make || '';
@@ -93,7 +93,7 @@ function renderAdvancedMetadata() {
     const md = entry.data;
     const analysis = analyzeImageType(md);
 
-    // Extract common fields (handling different tag names)
+    // Extract human-readable fields
     const make = md.Make || md.make || 'Unknown';
     const model = md.Model || md.model || 'Unknown';
     const date = md.DateTimeOriginal || md.CreateDate || 'Unknown';
@@ -101,12 +101,12 @@ function renderAdvancedMetadata() {
     const software = md.Software || 'None';
     const lens = md.LensModel || md.LensInfo || 'Unknown';
 
-    // Agar bilkul data nahi hai
+    // Agar file me koi kaam ka data nahi hai
     if(Object.keys(md).length < 5) {
       return `
         <div class="bg-slate-800 rounded-lg p-5 mb-4 border border-slate-700">
           <h3 class="text-lg font-bold text-slate-300 mb-2"><i class="fa-solid fa-triangle-exclamation text-yellow-500"></i> ${entry.name}</h3>
-          <p class="text-slate-400 text-sm">Is image me koi EXIF data nahi mila. Ye ek <b>Screenshot</b> ya <b>WhatsApp/Instagram</b> se download ki gayi photo ho sakti hai, jisme metadata pehle hi delete ho chuka hota hai.</p>
+          <p class="text-slate-400 text-sm">Is image me koi advanced EXIF data nahi mila. Ye ek <b>Screenshot</b> ya <b>WhatsApp/Instagram</b> se download ki gayi photo ho sakti hai, jisme metadata pehle hi delete ho chuka hota hai.</p>
         </div>
       `;
     }
@@ -140,9 +140,9 @@ function renderAdvancedMetadata() {
           </div>
         </div>
 
-        <!-- Raw JSON Toggle -->
+        <!-- Advanced Raw Data Toggle -->
         <details class="mt-4">
-          <summary class="cursor-pointer text-sm text-purple-400 hover:text-purple-300 font-semibold"><i class="fa-solid fa-code"></i> View All Raw Tags (Advanced)</summary>
+          <summary class="cursor-pointer text-sm text-purple-400 hover:text-purple-300 font-semibold"><i class="fa-solid fa-code"></i> View Raw Technical Tags (For Experts)</summary>
           <div class="mt-2 bg-black/50 p-4 rounded-lg overflow-x-auto max-h-60 text-xs font-mono text-green-400">
             <pre>${JSON.stringify(md, null, 2)}</pre>
           </div>
@@ -153,7 +153,7 @@ function renderAdvancedMetadata() {
 }
 
 // ==========================================
-// 3. OSINT (Hashes & GPS Link)
+// 3. OSINT TOOLS (Hashes & Search)
 // ==========================================
 async function generateHashes(file) {
   const buffer = await file.arrayBuffer();
@@ -165,9 +165,9 @@ function renderOSINT(metadata, sha256) {
   hashOutput.innerHTML = `
     <div class="bg-slate-900 p-3 rounded-lg mb-2">
       <span class="text-purple-400 font-bold text-xs">SHA-256 Hash:</span><br/>
-      <span class="text-white text-xs select-all">${sha256}</span>
+      <span class="text-white text-xs select-all break-all">${sha256}</span>
     </div>
-    <div class="text-xs text-slate-500">File ki authenticity check karne ke liye is hash ka use karein.</div>
+    <div class="text-xs text-slate-500">Image integrity verify karne ke liye.</div>
   `;
 
   if (metadata && metadata.latitude && metadata.longitude) {
@@ -179,27 +179,25 @@ function renderOSINT(metadata, sha256) {
 }
 
 // ==========================================
-// 4. LOCAL AI (WASM - Works on Mobile)
+// 4. LOCAL AI (WASM Engine)
 // ==========================================
 let aiPipeline = null;
 async function runAIAnalysis() {
   aiStatusText.innerText = "Loading AI Model (WASM)...";
   aiStatusDot.className = "w-3 h-3 rounded-full bg-yellow-500 animate-pulse";
-  aiOutput.innerHTML = "<span class='text-slate-500'>Pehli baar AI load hone me 10-20 seconds lagenge. Kripya pratiksha karein...</span>";
+  aiOutput.innerHTML = "<span class='text-slate-500'>AI model load ho raha hai. Mobile par isme 15-20 seconds lag sakte hain...</span>";
 
   try {
     const { pipeline, env } = await import('https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2');
     env.allowLocalModels = false;
 
     if (!aiPipeline) {
-      // Lightweight model (LaMini-Flan-T5-77M) for text analysis
       aiPipeline = await pipeline('text2text-generation', 'Xenova/LaMini-Flan-T5-77M');
     }
 
-    aiStatusText.innerText = "AI Ready. Analyzing Privacy Risks...";
+    aiStatusText.innerText = "AI Ready. Analyzing...";
     aiStatusDot.className = "w-3 h-3 rounded-full bg-green-500";
     
-    // Create a prompt based on extracted metadata
     const firstMeta = state.metadata[0]?.data || {};
     const metaString = JSON.stringify({
        Make: firstMeta.Make || 'Unknown',
@@ -208,9 +206,9 @@ async function runAIAnalysis() {
        Software: firstMeta.Software || 'Unknown'
     });
     
-    const prompt = `You are a cybersecurity expert. Based on this photo metadata: ${metaString}. Give 3 short bullet points explaining the privacy risks (like tracking, device fingerprinting). Keep it brief.`;
+    const prompt = `You are an OSINT investigator. Analyze these photo metadata findings: ${metaString}. Give 3 short bullet points outlining the privacy and security risks (like device tracking, location leaks). Keep it very brief.`;
 
-    const result = await aiPipeline(prompt, { max_new_tokens: 120 });
+    const result = await aiPipeline(prompt, { max_new_tokens: 100 });
     
     aiOutput.innerHTML = `
       <div class="bg-slate-900 p-4 rounded-lg border border-purple-500/30">
@@ -222,7 +220,7 @@ async function runAIAnalysis() {
   } catch (err) {
     aiStatusText.innerText = "AI Failed to Load.";
     aiStatusDot.className = "w-3 h-3 rounded-full bg-red-500";
-    aiOutput.innerHTML = `<span class="text-red-400">Error: ${err.message}. (Check internet speed or browser support).</span>`;
+    aiOutput.innerHTML = `<span class="text-red-400">Error: ${err.message}. Check your internet connection.</span>`;
   }
 }
 
@@ -244,7 +242,7 @@ document.getElementById('cleanBtn')?.addEventListener('click', async () => {
     a.download = `clean_${file.name}`;
     a.click();
     
-    outputDiv.innerHTML = '<i class="fa-solid fa-check-circle text-green-500"></i> Metadata Removed Successfully! File Downloaded.';
+    outputDiv.innerHTML = '<i class="fa-solid fa-check-circle text-green-500"></i> Metadata Removed! File Downloaded.';
     outputDiv.classList.add('animate-bounce');
     setTimeout(() => outputDiv.classList.remove('animate-bounce'), 1500);
   } catch (err) {
@@ -266,7 +264,6 @@ async function removeMetadata(file) {
     });
   }
   
-  // Canvas fallback for PNG/WebP
   return new Promise((resolve, reject) => {
     const img = new Image();
     const url = URL.createObjectURL(file);
