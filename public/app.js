@@ -1,14 +1,11 @@
 /* ============================================================
-   MODx OSINT - Core Logic (Fully Fixed & High Contrast)
+   MODx OSINT - Inbuilt Intelligence Engine
    ============================================================ */
 
 const homePage = document.getElementById('homePage');
 const modulePage = document.getElementById('modulePage');
 const moduleContent = document.getElementById('moduleContent');
 
-// ==========================================
-// NAVIGATION
-// ==========================================
 function showHome() {
   homePage.classList.remove('hidden');
   modulePage.classList.add('hidden');
@@ -26,12 +23,11 @@ function openModule(type) {
     case 'email': renderEmailModule(); break;
     case 'ip': renderIPModule(); break;
     case 'username': renderUsernameModule(); break;
-    case 'tools': renderToolsModule(); break;
   }
 }
 
 // ==========================================
-// 1. PHONE MODULE (Formatted & OSINT Links)
+// 1. INBUILT PHONE MODULE (Offline Parsing + Free API)
 // ==========================================
 function renderPhoneModule() {
   moduleContent.innerHTML = `
@@ -41,7 +37,7 @@ function renderPhoneModule() {
       </div>
       <div>
         <h2 class="text-2xl font-bold text-white">Phone Number Intel</h2>
-        <p class="text-sm text-slate-400">Format your target number and generate direct OSINT search links.</p>
+        <p class="text-sm text-slate-400">Inbuilt parsing & validation via libphonenumber-js.</p>
       </div>
     </div>
     
@@ -53,50 +49,74 @@ function renderPhoneModule() {
   `;
 }
 
-function scanPhone() {
+async function scanPhone() {
   const input = document.getElementById('phoneInput').value.trim();
   const resultDiv = document.getElementById('phoneResult');
   
-  if (!input) return alert('Please enter a phone number.');
+  if (!input) return alert('Please enter a phone number with country code (e.g. +919876543210).');
   
-  // Clean and Format: ensure +XX XXXXXXX
-  let clean = input.replace(/[^\d+]/g, ''); 
-  if(clean.length > 5) {
-    // Basic formatting for display
-    const match = clean.match(/^(\+\d{1,3})(\d+)$/);
-    if(match) clean = match[1] + ' ' + match[2];
-  }
+  resultDiv.innerHTML = '<div class="text-center text-green-400 mt-4 animate-pulse"><i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Parsing Number...</div>';
 
-  resultDiv.innerHTML = `
-    <div class="bg-slate-900/80 rounded-xl p-6 border border-slate-700 fade-in">
-      <div class="flex items-center gap-3 mb-6">
-        <i class="fa-solid fa-circle-check text-green-500 text-xl"></i>
-        <h3 class="text-lg font-bold text-white font-mono">${clean}</h3>
-      </div>
-      
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-        <div class="bg-slate-800 p-4 rounded-lg border border-slate-700">
-          <p class="text-xs text-slate-400 font-semibold mb-1 uppercase tracking-wider">Target OSINT Actions</p>
-          <p class="text-sm text-slate-300">Since free APIs rarely provide carrier data for all countries, use these direct links to perform deep OSINT:</p>
+  try {
+    // 1. Inbuilt Parsing using libphonenumber-js
+    const phoneNumber = libphonenumber.parsePhoneNumber(input);
+    
+    if (!phoneNumber.isValid()) throw new Error('Invalid phone number format.');
+
+    const country = phoneNumber.country || 'Unknown';
+    const carrier = phoneNumber.getCarrier() || 'Unknown';
+    const type = phoneNumber.getType() || 'Unknown';
+    const intlFormat = phoneNumber.formatInternational();
+    const nationalFormat = phoneNumber.formatNational();
+
+    // 2. Try Carrier Lookup via free API (omkar.cloud)
+    let apiCarrier = carrier;
+    let apiType = type;
+    try {
+      const res = await fetch(`https://carrier-lookup-api.omkar.cloud/lookup?phone=${encodeURIComponent(intlFormat)}`);
+      if (res.ok) {
+        const data = await res.json();
+        apiCarrier = data.carrier || apiCarrier;
+        apiType = data.line_type || apiType;
+      }
+    } catch (e) {
+      // Fallback to offline data if API fails
+    }
+
+    resultDiv.innerHTML = `
+      <div class="bg-slate-900/80 rounded-xl p-6 border border-slate-700 fade-in">
+        <h3 class="text-green-400 font-bold mb-4 flex items-center gap-2"><i class="fa-solid fa-circle-check"></i> Valid Number</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="bg-slate-800 p-4 rounded-lg border border-slate-700">
+            <p class="text-xs text-slate-400 uppercase">Formatted</p>
+            <p class="text-white font-medium font-mono">${intlFormat}</p>
+          </div>
+          <div class="bg-slate-800 p-4 rounded-lg border border-slate-700">
+            <p class="text-xs text-slate-400 uppercase">Country</p>
+            <p class="text-white font-medium">${country}</p>
+          </div>
+          <div class="bg-slate-800 p-4 rounded-lg border border-slate-700">
+            <p class="text-xs text-slate-400 uppercase">Carrier</p>
+            <p class="text-white font-medium">${apiCarrier}</p>
+          </div>
+          <div class="bg-slate-800 p-4 rounded-lg border border-slate-700">
+            <p class="text-xs text-slate-400 uppercase">Line Type</p>
+            <p class="text-white font-medium capitalize">${apiType}</p>
+          </div>
+          <div class="bg-slate-800 p-4 rounded-lg border border-slate-700 md:col-span-2">
+            <p class="text-xs text-slate-400 uppercase">National Format</p>
+            <p class="text-white font-medium font-mono">${nationalFormat}</p>
+          </div>
         </div>
-        <div class="flex flex-col gap-2 justify-center">
-          <a href="https://www.truecaller.com/search/global/${clean.replace(/\s/g, '')}" target="_blank" class="w-full text-center bg-blue-600 hover:bg-blue-500 text-white py-2 rounded-lg font-medium transition-colors text-sm">
-            <i class="fa-solid fa-address-book"></i> Search on Truecaller
-          </a>
-          <a href="https://www.google.com/search?q=%22${clean}%22" target="_blank" class="w-full text-center bg-slate-700 hover:bg-slate-600 text-white py-2 rounded-lg font-medium transition-colors text-sm">
-            <i class="fa-brands fa-google"></i> Google Dork Search
-          </a>
-          <a href="https://wa.me/${clean.replace(/\s/g, '')}" target="_blank" class="w-full text-center bg-green-700 hover:bg-green-600 text-white py-2 rounded-lg font-medium transition-colors text-sm">
-            <i class="fa-brands fa-whatsapp"></i> Check WhatsApp
-          </a>
-        </div>
       </div>
-    </div>
-  `;
+    `;
+  } catch (err) {
+    resultDiv.innerHTML = `<div class="text-red-400 mt-4 bg-red-900/20 p-4 rounded-xl border border-red-500/50">Error: ${err.message}</div>`;
+  }
 }
 
 // ==========================================
-// 2. PHOTO MODULE (EXIF)
+// 2. INBUILT PHOTO MODULE (Client-Side EXIF)
 // ==========================================
 function renderPhotoModule() {
   moduleContent.innerHTML = `
@@ -106,7 +126,7 @@ function renderPhotoModule() {
       </div>
       <div>
         <h2 class="text-2xl font-bold text-white">Photo EXIF Extractor</h2>
-        <p class="text-sm text-slate-400">Upload a photo to extract GPS, camera details, and raw metadata.</p>
+        <p class="text-sm text-slate-400">Extract GPS, camera details, and raw metadata.</p>
       </div>
     </div>
     
@@ -131,7 +151,7 @@ async function scanPhoto(input) {
     const md = await exifr.parse(file, true) || {};
     
     if(Object.keys(md).length < 3) {
-      resultDiv.innerHTML = `<div class="bg-yellow-900/30 border border-yellow-500/50 text-yellow-400 p-4 rounded-xl mt-4 text-sm fade-in"><i class="fa-solid fa-triangle-exclamation"></i> No EXIF data found. This image has likely been stripped (screenshot or social media download).</div>`;
+      resultDiv.innerHTML = `<div class="bg-yellow-900/30 border border-yellow-500/50 text-yellow-400 p-4 rounded-xl mt-4 text-sm fade-in"><i class="fa-solid fa-triangle-exclamation"></i> No EXIF data found. This image has likely been stripped.</div>`;
       return;
     }
     
@@ -172,7 +192,7 @@ async function scanPhoto(input) {
 }
 
 // ==========================================
-// 3. EMAIL MODULE (XposedOrNot API)
+// 3. INBUILT EMAIL MODULE (HackMyIP API - CORS Enabled)
 // ==========================================
 function renderEmailModule() {
   moduleContent.innerHTML = `
@@ -182,7 +202,7 @@ function renderEmailModule() {
       </div>
       <div>
         <h2 class="text-2xl font-bold text-white">Email Breach Check</h2>
-        <p class="text-sm text-slate-400">Check if an email address has been compromised in a data breach.</p>
+        <p class="text-sm text-slate-400">Check if an email has been compromised in known breaches.</p>
       </div>
     </div>
     
@@ -203,18 +223,9 @@ async function scanEmail() {
   resultDiv.innerHTML = '<div class="text-center text-blue-400 mt-4 animate-pulse"><i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Scanning Breaches...</div>';
   
   try {
-    // XposedOrNot API - Free, reliable, no key needed
-    const res = await fetch(`https://api.xposedornot.com/v1/check-email/${encodeURIComponent(email)}`);
-    
-    if (res.status === 404) {
-      resultDiv.innerHTML = `
-        <div class="bg-green-900/20 border border-green-500/50 rounded-xl p-6 fade-in">
-          <h3 class="text-green-400 font-bold mb-2 flex items-center gap-2"><i class="fa-solid fa-shield-check"></i> No Breaches Found</h3>
-          <p class="text-slate-300 text-sm">Good news! This email was not found in any known public data breaches.</p>
-        </div>
-      `;
-      return;
-    }
+    // HackMyIP API - Free, no key, CORS enabled
+    const res = await fetch(`https://hackmyip.com/api/breach?email=${encodeURIComponent(email)}`);
+    if (!res.ok) throw new Error('API limit reached or invalid email.');
     
     const data = await res.json();
     
@@ -229,15 +240,41 @@ async function scanEmail() {
         </div>
       `;
     } else {
-       resultDiv.innerHTML = `<div class="text-yellow-400 mt-4">Unknown response format from API.</div>`;
+      resultDiv.innerHTML = `
+        <div class="bg-green-900/20 border border-green-500/50 rounded-xl p-6 fade-in">
+          <h3 class="text-green-400 font-bold mb-2 flex items-center gap-2"><i class="fa-solid fa-shield-check"></i> No Breaches Found</h3>
+          <p class="text-slate-300 text-sm">Good news! This email was not found in any known public data breaches.</p>
+        </div>
+      `;
     }
   } catch (err) {
-    resultDiv.innerHTML = `<div class="text-red-400 mt-4 bg-red-900/20 p-4 rounded-xl border border-red-500/50">Error: ${err.message}</div>`;
+    // Fallback to XposedOrNot if HackMyIP fails
+    try {
+      const res = await fetch(`https://api.xposedornot.com/v1/check-email/${encodeURIComponent(email)}`);
+      if (!res.ok) throw new Error('No breaches found or API limit.');
+      const data = await res.json();
+      
+      if (data.breaches && data.breaches.length > 0) {
+         resultDiv.innerHTML = `
+          <div class="bg-red-900/20 border border-red-500/50 rounded-xl p-6 fade-in">
+            <h3 class="text-red-400 font-bold mb-2"><i class="fa-solid fa-triangle-exclamation"></i> Compromised (XposedOrNot)</h3>
+            <p class="text-white text-sm mb-4">Found in <strong>${data.breaches.length}</strong> breaches.</p>
+            <div class="flex flex-wrap gap-2">
+              ${data.breaches.map(b => `<span class="bg-red-500/20 text-red-300 px-3 py-1 rounded-full text-xs border border-red-500/30">${b}</span>`).join('')}
+            </div>
+          </div>
+        `;
+      } else {
+         resultDiv.innerHTML = `<div class="text-green-400 mt-4 bg-green-900/20 p-4 rounded-xl border border-green-500/50">No breaches found.</div>`;
+      }
+    } catch (err2) {
+      resultDiv.innerHTML = `<div class="text-red-400 mt-4 bg-red-900/20 p-4 rounded-xl border border-red-500/50">Error: ${err.message}</div>`;
+    }
   }
 }
 
 // ==========================================
-// 4. IP MODULE (ipapi.co)
+// 4. INBUILT IP MODULE (ipwho.is - CORS Enabled)
 // ==========================================
 function renderIPModule() {
   moduleContent.innerHTML = `
@@ -268,20 +305,20 @@ async function scanIP() {
   resultDiv.innerHTML = '<div class="text-center text-orange-400 mt-4 animate-pulse"><i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Locating IP...</div>';
   
   try {
-    // ipapi.co - Free, reliable, no key needed for basic info
-    const res = await fetch(`https://ipapi.co/${ip}/json/`);
+    // ipwho.is - Free, no key, CORS enabled
+    const res = await fetch(`https://ipwho.is/${ip}`);
     const data = await res.json();
     
-    if (data.error) throw new Error(data.reason || 'Invalid IP');
+    if (!data.success) throw new Error(data.message || 'Invalid IP');
     
     resultDiv.innerHTML = `
       <div class="bg-slate-900/80 rounded-xl p-6 border border-slate-700 fade-in">
         <h3 class="text-orange-400 font-bold mb-4 flex items-center gap-2"><i class="fa-solid fa-location-dot"></i> Location Data</h3>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div class="bg-slate-800 p-4 rounded-lg border border-slate-700"><p class="text-xs text-slate-400 uppercase">City / Region</p><p class="text-white font-medium">${data.city || 'N/A'}, ${data.region || 'N/A'}</p></div>
-          <div class="bg-slate-800 p-4 rounded-lg border border-slate-700"><p class="text-xs text-slate-400 uppercase">Country</p><p class="text-white font-medium">${data.country_name || 'N/A'}</p></div>
-          <div class="bg-slate-800 p-4 rounded-lg border border-slate-700"><p class="text-xs text-slate-400 uppercase">ISP / Organization</p><p class="text-white font-medium">${data.org || 'N/A'}</p></div>
-          <div class="bg-slate-800 p-4 rounded-lg border border-slate-700"><p class="text-xs text-slate-400 uppercase">Timezone</p><p class="text-white font-medium">${data.timezone || 'N/A'}</p></div>
+          <div class="bg-slate-800 p-4 rounded-lg border border-slate-700"><p class="text-xs text-slate-400 uppercase">Country</p><p class="text-white font-medium">${data.country || 'N/A'}</p></div>
+          <div class="bg-slate-800 p-4 rounded-lg border border-slate-700"><p class="text-xs text-slate-400 uppercase">ISP / Organization</p><p class="text-white font-medium">${data.connection?.isp || 'N/A'}</p></div>
+          <div class="bg-slate-800 p-4 rounded-lg border border-slate-700"><p class="text-xs text-slate-400 uppercase">Timezone</p><p class="text-white font-medium">${data.timezone?.id || 'N/A'}</p></div>
         </div>
       </div>
     `;
@@ -291,7 +328,7 @@ async function scanIP() {
 }
 
 // ==========================================
-// 5. USERNAME MODULE (GitHub)
+// 5. INBUILT USERNAME MODULE (GitHub API)
 // ==========================================
 function renderUsernameModule() {
   moduleContent.innerHTML = `
@@ -348,44 +385,4 @@ async function scanUsername() {
   } catch (err) {
     resultDiv.innerHTML = `<div class="text-red-400 mt-4 bg-red-900/20 p-4 rounded-xl border border-red-500/50">Error: ${err.message}</div>`;
   }
-}
-
-// ==========================================
-// 6. TOOLS DIRECTORY
-// ==========================================
-function renderToolsModule() {
-  const tools = [
-    { name: 'Sherlock', desc: 'Hunt usernames across 400+ sites.', url: 'https://sherlock-project.github.io/', icon: 'fa-user-secret' },
-    { name: 'PhoneInfoga', desc: 'Advanced phone number OSINT.', url: 'https://github.com/sundowndev/phoneinfoga', icon: 'fa-phone' },
-    { name: 'Holehe', desc: 'Check which sites an email is registered on.', url: 'https://github.com/megadose/holehe', icon: 'fa-envelope' },
-    { name: 'Picuki', desc: 'View Instagram profiles anonymously.', url: 'https://www.picuki.com/', icon: 'fa-instagram' },
-    { name: 'Yandex Images', desc: 'Reverse image search for faces and places.', url: 'https://yandex.com/images/', icon: 'fa-image' },
-    { name: 'Shodan', desc: 'Search engine for IoT devices.', url: 'https://www.shodan.io/', icon: 'fa-server' },
-  ];
-
-  moduleContent.innerHTML = `
-    <div class="flex items-center gap-4 mb-6 border-b border-slate-700 pb-4">
-      <div class="w-12 h-12 rounded-xl bg-pink-500/10 border border-pink-500/20 flex items-center justify-center">
-        <i class="fa-solid fa-toolbox text-pink-400 text-xl"></i>
-      </div>
-      <div>
-        <h2 class="text-2xl font-bold text-white">OSINT Arsenal</h2>
-        <p class="text-sm text-slate-400">Direct links to top external intelligence tools.</p>
-      </div>
-    </div>
-
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-      ${tools.map(tool => `
-        <a href="${tool.url}" target="_blank" class="bg-slate-800/80 border border-slate-700 rounded-xl p-4 hover:border-pink-500 hover:bg-slate-800 transition-all group flex items-start gap-4">
-          <div class="w-10 h-10 rounded-lg bg-pink-500/10 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
-            <i class="fa-solid ${tool.icon} text-pink-400"></i>
-          </div>
-          <div>
-            <h4 class="font-bold text-white group-hover:text-pink-400 transition-colors">${tool.name} <i class="fa-solid fa-arrow-up-right-from-square text-xs ml-1"></i></h4>
-            <p class="text-xs text-slate-400 mt-1">${tool.desc}</p>
-          </div>
-        </a>
-      `).join('')}
-    </div>
-  `;
 }
