@@ -6,37 +6,93 @@
   <title>MODx OSINT | Intelligence Platform</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/exifr@7.1.3/dist/full.umd.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/piexifjs@1.0.6/piexif.min.js"></script>
-  <link rel="stylesheet" href="styles.css">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #0B0F19;
+      background-image: 
+        radial-gradient(circle at 15% 50%, rgba(139, 92, 246, 0.08) 0%, transparent 50%),
+        radial-gradient(circle at 85% 30%, rgba(6, 182, 212, 0.08) 0%, transparent 50%);
+      background-attachment: fixed;
+      color: #F8FAFC;
+    }
+    .font-mono { font-family: 'Fira Code', monospace; }
+    
+    /* Smooth Animations */
+    .fade-in { animation: fadeIn 0.4s ease-out forwards; }
+    .slide-up { opacity: 0; animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+    
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* Glass Panels */
+    .glass-panel {
+      background: rgba(30, 41, 59, 0.6);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+    }
+
+    /* Interactive Cards */
+    .module-card {
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      border: 1px solid rgba(51, 65, 85, 0.8);
+    }
+    .module-card:hover {
+      border-color: #8B5CF6;
+      transform: translateY(-4px);
+      box-shadow: 0 10px 25px -5px rgba(139, 92, 246, 0.3);
+    }
+
+    /* Inputs */
+    input {
+      transition: all 0.3s ease;
+    }
+    input:focus {
+      outline: none;
+      border-color: #8B5CF6;
+      box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #0B0F19; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #8B5CF6; }
+  </style>
 </head>
-<body class="min-h-screen text-slate-200">
+<body class="min-h-screen pb-12">
 
   <!-- Navbar -->
-  <nav class="glass-nav fixed top-0 w-full z-50 px-6 py-3 flex justify-between items-center">
-    <div class="flex items-center gap-3 cursor-pointer" onclick="showHome()">
-      <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center">
-        <i class="fa-solid fa-eye text-white text-sm"></i>
+  <nav class="border-b border-slate-800 bg-[#0B0F19]/80 backdrop-blur-md sticky top-0 z-50">
+    <div class="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
+      <div class="flex items-center gap-3 cursor-pointer" onclick="showHome()">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-purple-500 to-cyan-500 flex items-center justify-center shadow-lg shadow-purple-500/20">
+          <i class="fa-solid fa-eye text-white text-lg"></i>
+        </div>
+        <span class="font-bold text-xl tracking-tight text-white">MODx <span class="text-purple-400">OSINT</span></span>
       </div>
-      <span class="font-extrabold text-xl tracking-tight text-white">MODx <span class="text-purple-400">OSINT</span></span>
+      <button onclick="showHome()" class="text-sm font-medium text-slate-300 hover:text-white transition-colors flex items-center gap-2 bg-slate-800/50 px-4 py-2 rounded-lg">
+        <i class="fa-solid fa-house"></i> Dashboard
+      </button>
     </div>
-    <button onclick="showHome()" class="text-sm text-slate-400 hover:text-white transition-colors">
-      <i class="fa-solid fa-house"></i> Home
-    </button>
   </nav>
 
   <!-- ================= HOME PAGE ================= -->
-  <main id="homePage" class="pt-24 pb-12 px-4 max-w-6xl mx-auto">
+  <main id="homePage" class="pt-12 pb-12 px-4 max-w-6xl mx-auto">
+    
     <!-- Hero -->
     <section class="text-center mb-16 fade-in">
-      <h1 class="text-4xl md:text-6xl font-extrabold mb-4">
-        <span class="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-500 to-red-500">
-          Intelligence at your fingertips
+      <h1 class="text-4xl md:text-5xl font-extrabold mb-4 tracking-tight">
+        <span class="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-cyan-400">
+          Next-Gen Intelligence
         </span>
       </h1>
-      <p class="text-slate-400 max-w-2xl mx-auto text-lg">
-        A unified OSINT platform. Extract metadata, investigate phone numbers, check breaches, and uncover digital footprints — all in one place.
+      <p class="text-slate-400 max-w-2xl mx-auto text-base md:text-lg">
+        A unified OSINT platform. Extract metadata, investigate phone numbers, check email breaches, and uncover digital footprints — all in one place.
       </p>
     </section>
 
@@ -44,73 +100,66 @@
     <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       
       <!-- Phone -->
-      <div onclick="openModule('phone')" class="module-card group slide-up">
-        <div class="w-12 h-12 rounded-xl bg-green-500/20 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+      <div onclick="openModule('phone')" class="module-card bg-slate-900/50 rounded-2xl p-6 cursor-pointer slide-up group">
+        <div class="w-12 h-12 rounded-xl bg-green-500/10 border border-green-500/20 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
           <i class="fa-solid fa-phone text-green-400 text-xl"></i>
         </div>
-        <h3 class="text-xl font-bold text-white mb-1">Phone Number Intel</h3>
-        <p class="text-sm text-slate-400">Parse E.164 format, validate carrier info, and get region details.</p>
+        <h3 class="text-lg font-bold text-white mb-2">Phone Number Intel</h3>
+        <p class="text-sm text-slate-400">Format E.164, validate numbers, and generate direct OSINT links for Truecaller & Google.</p>
       </div>
 
       <!-- Photo -->
-      <div onclick="openModule('photo')" class="module-card group slide-up" style="animation-delay: 0.1s">
-        <div class="w-12 h-12 rounded-xl bg-purple-500/20 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+      <div onclick="openModule('photo')" class="module-card bg-slate-900/50 rounded-2xl p-6 cursor-pointer slide-up group" style="animation-delay: 0.1s">
+        <div class="w-12 h-12 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
           <i class="fa-solid fa-camera text-purple-400 text-xl"></i>
         </div>
-        <h3 class="text-xl font-bold text-white mb-1">Photo EXIF Extractor</h3>
+        <h3 class="text-lg font-bold text-white mb-2">Photo EXIF Extractor</h3>
         <p class="text-sm text-slate-400">Extract camera model, GPS, settings, and strip metadata for privacy.</p>
       </div>
 
-      <!-- Instagram -->
-      <div onclick="openModule('instagram')" class="module-card group slide-up" style="animation-delay: 0.2s">
-        <div class="w-12 h-12 rounded-xl bg-pink-500/20 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-          <i class="fa-brands fa-instagram text-pink-400 text-xl"></i>
-        </div>
-        <h3 class="text-xl font-bold text-white mb-1">Instagram Profile Intel</h3>
-        <p class="text-sm text-slate-400">Fetch public bio, follower count, and profile picture.</p>
-      </div>
-
       <!-- Email -->
-      <div onclick="openModule('email')" class="module-card group slide-up" style="animation-delay: 0.3s">
-        <div class="w-12 h-12 rounded-xl bg-blue-500/20 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+      <div onclick="openModule('email')" class="module-card bg-slate-900/50 rounded-2xl p-6 cursor-pointer slide-up group" style="animation-delay: 0.2s">
+        <div class="w-12 h-12 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
           <i class="fa-solid fa-envelope text-blue-400 text-xl"></i>
         </div>
-        <h3 class="text-xl font-bold text-white mb-1">Email Breach Check</h3>
-        <p class="text-sm text-slate-400">Check if an email address has been exposed in data breaches.</p>
+        <h3 class="text-lg font-bold text-white mb-2">Email Breach Check</h3>
+        <p class="text-sm text-slate-400">Check if an email address has been exposed in known data breaches.</p>
       </div>
 
       <!-- IP -->
-      <div onclick="openModule('ip')" class="module-card group slide-up" style="animation-delay: 0.4s">
-        <div class="w-12 h-12 rounded-xl bg-orange-500/20 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+      <div onclick="openModule('ip')" class="module-card bg-slate-900/50 rounded-2xl p-6 cursor-pointer slide-up group" style="animation-delay: 0.3s">
+        <div class="w-12 h-12 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
           <i class="fa-solid fa-network-wired text-orange-400 text-xl"></i>
         </div>
-        <h3 class="text-xl font-bold text-white mb-1">IP Address Lookup</h3>
-        <p class="text-sm text-slate-400">Geolocate any IP address — city, country, ISP, and timezone.</p>
+        <h3 class="text-lg font-bold text-white mb-2">IP Address Lookup</h3>
+        <p class="text-sm text-slate-400">Geolocate any IP address — city, country, ISP, and timezone details.</p>
       </div>
 
       <!-- Username -->
-      <div onclick="openModule('username')" class="module-card group slide-up" style="animation-delay: 0.5s">
-        <div class="w-12 h-12 rounded-xl bg-cyan-500/20 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+      <div onclick="openModule('username')" class="module-card bg-slate-900/50 rounded-2xl p-6 cursor-pointer slide-up group" style="animation-delay: 0.4s">
+        <div class="w-12 h-12 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
           <i class="fa-solid fa-user-secret text-cyan-400 text-xl"></i>
         </div>
-        <h3 class="text-xl font-bold text-white mb-1">Username Enumeration</h3>
-        <p class="text-sm text-slate-400">Check username availability across major platforms.</p>
+        <h3 class="text-lg font-bold text-white mb-2">Username Enumeration</h3>
+        <p class="text-sm text-slate-400">Check username existence and fetch public data from GitHub.</p>
       </div>
 
-    </section>
+      <!-- Tools -->
+      <div onclick="openModule('tools')" class="module-card bg-slate-900/50 rounded-2xl p-6 cursor-pointer slide-up group" style="animation-delay: 0.5s">
+        <div class="w-12 h-12 rounded-xl bg-pink-500/10 border border-pink-500/20 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+          <i class="fa-solid fa-toolbox text-pink-400 text-xl"></i>
+        </div>
+        <h3 class="text-lg font-bold text-white mb-2">OSINT Arsenal</h3>
+        <p class="text-sm text-slate-400">Access top external tools like Sherlock, Picuki, and PhoneInfoga.</p>
+      </div>
 
-    <!-- Tools Directory -->
-    <section class="mt-20">
-      <h2 class="text-2xl font-bold mb-6 text-white">Advanced OSINT Arsenal</h2>
-      <div id="toolDirectory" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"></div>
     </section>
   </main>
 
   <!-- ================= MODULE WORKSPACE ================= -->
-  <main id="modulePage" class="hidden pt-24 pb-12 px-4 max-w-4xl mx-auto">
+  <main id="modulePage" class="hidden pt-8 pb-12 px-4 max-w-4xl mx-auto">
     
-    <!-- Back Button -->
-    <button onclick="showHome()" class="text-sm text-slate-400 hover:text-white mb-6 flex items-center gap-2 transition-colors">
+    <button onclick="showHome()" class="text-sm text-slate-400 hover:text-white mb-6 flex items-center gap-2 transition-colors bg-slate-800/50 px-4 py-2 rounded-lg w-max">
       <i class="fa-solid fa-arrow-left"></i> Back to Dashboard
     </button>
 
@@ -120,4 +169,4 @@
 
   <script src="app.js"></script>
 </body>
-          </html>
+  </html>
