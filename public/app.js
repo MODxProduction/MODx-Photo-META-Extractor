@@ -1,15 +1,21 @@
 /* ============================================================
-   MODx OSINT - Ultimate Engine (All Fixes Applied)
+   MODx OSINT - Ultimate Engine (CORS Fixed & Deep Phone Intel)
    ============================================================ */
 
 const homePage = document.getElementById('homePage');
 const modulePage = document.getElementById('modulePage');
 const moduleContent = document.getElementById('moduleContent');
 
-function showHome() { homePage.classList.remove('hidden'); modulePage.classList.add('hidden'); window.scrollTo(0, 0); }
+function showHome() { 
+  homePage.classList.remove('hidden'); 
+  modulePage.classList.add('hidden'); 
+  window.scrollTo(0, 0); 
+}
 
 function openModule(type) {
-  homePage.classList.add('hidden'); modulePage.classList.remove('hidden'); window.scrollTo(0, 0);
+  homePage.classList.add('hidden'); 
+  modulePage.classList.remove('hidden'); 
+  window.scrollTo(0, 0);
   switch(type) {
     case 'phone': renderPhoneModule(); break;
     case 'photo': renderPhotoModule(); break;
@@ -20,7 +26,7 @@ function openModule(type) {
 }
 
 // ==========================================
-// 1. PHONE MODULE (Deep Inbuilt + Free Demo API)
+// 1. PHONE MODULE (Deep Carrier & Region Lookup)
 // ==========================================
 function renderPhoneModule() {
   moduleContent.innerHTML = `
@@ -30,7 +36,7 @@ function renderPhoneModule() {
       </div>
       <div>
         <h2 class="text-2xl font-bold text-white">Phone Number Intel</h2>
-        <p class="text-sm text-slate-400">Deep parsing with carrier and region lookup.</p>
+        <p class="text-sm text-slate-400">Deep parsing with carrier, region, and line type lookup.</p>
       </div>
     </div>
     <div class="flex flex-col md:flex-row gap-3 mb-6">
@@ -47,10 +53,10 @@ async function scanPhone() {
   
   if (!input) return alert('Please enter a phone number with country code.');
   
-  resultDiv.innerHTML = '<div class="text-center text-green-400 mt-4 animate-pulse"><i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Analyzing Number...</div>';
+  resultDiv.innerHTML = '<div class="text-center text-green-400 mt-4 animate-pulse"><i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Parsing & Fetching Intel...</div>';
 
   try {
-    // 1. Inbuilt Parsing (Format & Validation)
+    // 1. Inbuilt Local Parsing
     const phoneNumber = libphonenumber.parsePhoneNumberFromString(input);
     if (!phoneNumber || !phoneNumber.isValid()) throw new Error('Invalid phone number format.');
 
@@ -59,11 +65,11 @@ async function scanPhone() {
     const country = phoneNumber.country || 'Unknown';
     const type = phoneNumber.getType() || 'Unknown';
 
-    // 2. Carrier & Region Lookup via Free Demo API (No Key)
+    // 2. Remote Carrier & Region Lookup (spaw.co free demo API)
     let carrier = 'Unknown';
     let region = 'Unknown';
     try {
-        const res = await fetch('https://spaw.co/api/v1/phone', {
+        const res = await fetch('https://spaw.co/api/v1/demo/phone', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ number: intlFormat })
@@ -74,12 +80,12 @@ async function scanPhone() {
             region = data.region || 'Unknown';
         }
     } catch (e) {
-        // Fallback: Only offline data if API fails
+        // Silently fallback to local data if external API fails
     }
 
     resultDiv.innerHTML = `
       <div class="bg-slate-900/80 rounded-xl p-6 border border-slate-700 fade-in">
-        <h3 class="text-green-400 font-bold mb-4 flex items-center gap-2"><i class="fa-solid fa-circle-check"></i> Valid Number</h3>
+        <h3 class="text-green-400 font-bold mb-4 flex items-center gap-2"><i class="fa-solid fa-circle-check"></i> Valid Number Detected</h3>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div class="bg-slate-800 p-4 rounded-lg border border-slate-700">
             <p class="text-xs text-slate-400 uppercase">International Format</p>
@@ -90,11 +96,11 @@ async function scanPhone() {
             <p class="text-white font-medium font-mono text-lg">${nationalFormat}</p>
           </div>
           <div class="bg-slate-800 p-4 rounded-lg border border-slate-700">
-            <p class="text-xs text-slate-400 uppercase">Carrier</p>
+            <p class="text-xs text-slate-400 uppercase">Carrier / Network</p>
             <p class="text-white font-medium">${carrier}</p>
           </div>
           <div class="bg-slate-800 p-4 rounded-lg border border-slate-700">
-            <p class="text-xs text-slate-400 uppercase">Line Type & Region</p>
+            <p class="text-xs text-slate-400 uppercase">Region & Line Type</p>
             <p class="text-white font-medium capitalize">${type} • ${region}</p>
           </div>
         </div>
@@ -193,7 +199,6 @@ async function scanEmail() {
   resultDiv.innerHTML = '<div class="text-center text-blue-400 mt-4 animate-pulse"><i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Scanning Breaches...</div>';
   
   try {
-    // Try HackMyIP first
     let res = await fetch(`https://hackmyip.com/api/breach?email=${encodeURIComponent(email)}`);
     if (res.ok) {
         const data = await res.json();
@@ -202,7 +207,6 @@ async function scanEmail() {
             return;
         }
     }
-    // Fallback to XposedOrNot
     res = await fetch(`https://api.xposedornot.com/v1/check-email/${encodeURIComponent(email)}`);
     if (res.ok) {
         const data = await res.json();
@@ -211,15 +215,14 @@ async function scanEmail() {
             return;
         }
     }
-    // If both fail or no breaches
     resultDiv.innerHTML = `<div class="bg-green-900/20 border border-green-500/50 rounded-xl p-6 fade-in"><h3 class="text-green-400 font-bold mb-2"><i class="fa-solid fa-shield-check"></i> No Breaches Found</h3><p class="text-slate-300 text-sm">This email is clean in our databases.</p></div>`;
   } catch (err) {
-    resultDiv.innerHTML = `<div class="text-red-400 mt-4 bg-red-900/20 p-4 rounded-xl border border-red-500/50">Error: Service temporarily unavailable. Please try again later.</div>`;
+    resultDiv.innerHTML = `<div class="text-red-400 mt-4 bg-red-900/20 p-4 rounded-xl border border-red-500/50">Error: Service temporarily unavailable.</div>`;
   }
 }
 
 // ==========================================
-// 4. INBUILT IP MODULE (ipwho.is)
+// 4. IP MODULE (ipwho.is)
 // ==========================================
 function renderIPModule() {
   moduleContent.innerHTML = `
@@ -248,7 +251,7 @@ async function scanIP() {
 }
 
 // ==========================================
-// 5. UNIVERSAL USERNAME SEARCH (Fixed CORS & Telegram)
+// 5. UNIVERSAL USERNAME SEARCH (CORS Fallback Fixed)
 // ==========================================
 function renderUsernameModule() {
   moduleContent.innerHTML = `
@@ -294,21 +297,31 @@ async function scanUsername() {
         resultDiv.innerHTML = `<div class="bg-slate-900/80 rounded-xl p-6 border border-slate-700 fade-in flex flex-col md:flex-row gap-6 items-center"><img src="${data.avatar_url}" class="w-28 h-28 rounded-full border-4 border-cyan-500 shadow-lg shadow-cyan-500/20"><div class="flex-1 text-center md:text-left"><h3 class="text-2xl font-bold text-white">${data.name || data.login}</h3><p class="text-cyan-400 font-mono text-sm mb-2">@${data.login}</p><p class="text-slate-300 text-sm mb-4">${data.bio || 'No bio available.'}</p><div class="flex gap-4 justify-center md:justify-start text-sm"><div class="bg-slate-800 px-4 py-2 rounded-lg border border-slate-700"><strong class="text-white">${data.public_repos}</strong> <span class="text-slate-400">Repos</span></div><div class="bg-slate-800 px-4 py-2 rounded-lg border border-slate-700"><strong class="text-white">${data.followers}</strong> <span class="text-slate-400">Followers</span></div></div></div></div>`;
 
     } else if (platform === 'ig') {
-        // Fixed Instagram API via corsproxy.io
+        // Dual-Proxy Fallback System for Instagram
         const targetUrl = `https://i.instagram.com/api/v1/users/web_profile_info/?username=${username}`;
-        const proxyUrl = `https://corsproxy.io/?url=${encodeURIComponent(targetUrl)}`;
-        const res = await fetch(proxyUrl, { headers: { 'User-Agent': 'Instagram 219.0.0.12.117 Android' } });
-        if (!res.ok) throw new Error('Profile not found or private.');
-        const text = await res.text();
-        if (!text) throw new Error('Empty response from server.');
+        let text = '';
+        
+        try {
+            const res1 = await fetch(`https://corsproxy.io/?url=${encodeURIComponent(targetUrl)}`, { headers: { 'User-Agent': 'Instagram 219.0.0.12.117 Android' } });
+            if (res1.ok) text = await res1.text();
+        } catch (e) { /* Ignore and try next proxy */ }
+
+        if (!text || text.trim() === '') {
+            const res2 = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`);
+            if (res2.ok) text = await res2.text();
+        }
+
+        if (!text || !text.startsWith('{')) {
+            throw new Error('Proxy failed to fetch valid JSON. Instagram may be blocking the request. Please try again later.');
+        }
+
         const data = JSON.parse(text);
         const user = data.data?.user;
-        if (!user) throw new Error('Could not parse profile data.');
+        if (!user) throw new Error('Profile not found or private.');
 
         resultDiv.innerHTML = `<div class="bg-slate-900/80 rounded-xl p-6 border border-slate-700 fade-in flex flex-col md:flex-row gap-6 items-center"><img src="${user.profile_pic_url_hd || user.profile_pic_url}" class="w-28 h-28 rounded-full border-4 border-pink-500 shadow-lg shadow-pink-500/20"><div class="flex-1 text-center md:text-left"><h3 class="text-2xl font-bold text-white">${user.full_name || user.username}</h3><p class="text-pink-400 font-mono text-sm mb-2">@${user.username}</p><p class="text-slate-300 text-sm mb-4">${user.biography || 'No bio available.'}</p><div class="flex gap-4 justify-center md:justify-start text-sm"><div class="bg-slate-800 px-4 py-2 rounded-lg border border-slate-700"><strong class="text-white">${user.edge_followed_by?.count || 0}</strong> <span class="text-slate-400">Followers</span></div><div class="bg-slate-800 px-4 py-2 rounded-lg border border-slate-700"><strong class="text-white">${user.edge_owner_to_timeline_media?.count || 0}</strong> <span class="text-slate-400">Posts</span></div></div></div></div>`;
 
     } else if (platform === 'tg') {
-        // Fixed Telegram via tg-resolve logic
         const res = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(`https://t.me/${username}`)}`);
         if (!res.ok) throw new Error('Telegram profile not found.');
         const html = await res.text();
