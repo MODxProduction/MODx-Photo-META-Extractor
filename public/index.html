@@ -98,4 +98,39 @@
           </div>
           <!-- GPS Map -->
           <div class="glass rounded-xl p-6 md:col-span-2" id="gpsSection" style="display:none;">
-            <h3 class="text-xl font-bold mb-4 text-purple-400"><i class="fa-solid fa-map-l
+            <h3 class="text-xl font-bold mb-4 text-purple-400"><i class="fa-solid fa-map-location-dot"></i> Location Found</h3>
+            <a id="gpsLink" href="#" target="_blank" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg inline-block transition-colors">Open in Google Maps</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- AI Tab -->
+      <div id="tab-ai" class="tab-content hidden">
+        <div class="glass rounded-xl p-6">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-3 h-3 rounded-full bg-yellow-500 animate-pulse" id="aiStatusDot"></div>
+            <span id="aiStatusText" class="text-sm font-semibold text-slate-300">AI Initializing (Downloading Model...)</span>
+          </div>
+          <div id="aiOutput" class="font-mono text-sm text-slate-300 whitespace-pre-wrap"></div>
+        </div>
+      </div>
+
+      <!-- Protect Tab -->
+      <div id="tab-protect" class="tab-content hidden">
+        <div class="glass rounded-xl p-6 text-center">
+          <i class="fa-solid fa-user-shield text-5xl text-green-500 mb-4"></i>
+          <h3 class="text-xl font-bold mb-2">Remove All Metadata</h3>
+          <p class="text-slate-400 mb-6 text-sm">Ye aapki photo se GPS, Camera, aur Time sab remove kar dega.</p>
+          <button id="cleanBtn" class="bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-lg font-bold text-lg transition-all transform hover:scale-105 shadow-lg shadow-green-900/50">
+            <i class="fa-solid fa-broom"></i> Clean & Download
+          </button>
+          <div id="protectOutput" class="mt-4 text-sm font-semibold text-green-400"></div>
+        </div>
+      </div>
+
+    </section>
+  </main>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
