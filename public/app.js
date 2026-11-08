@@ -1,5 +1,5 @@
 /* ============================================================
-   MODx OSINT - Inbuilt Intelligence Engine
+   MODx OSINT - Inbuilt Intelligence Engine (Bug Fixed)
    ============================================================ */
 
 const homePage = document.getElementById('homePage');
@@ -27,7 +27,7 @@ function openModule(type) {
 }
 
 // ==========================================
-// 1. INBUILT PHONE MODULE (Offline Parsing + Free API)
+// 1. INBUILT PHONE MODULE (Offline Parsing)
 // ==========================================
 function renderPhoneModule() {
   moduleContent.innerHTML = `
@@ -37,7 +37,7 @@ function renderPhoneModule() {
       </div>
       <div>
         <h2 class="text-2xl font-bold text-white">Phone Number Intel</h2>
-        <p class="text-sm text-slate-400">Inbuilt parsing & validation via libphonenumber-js.</p>
+        <p class="text-sm text-slate-400">Inbuilt offline parsing & formatting.</p>
       </div>
     </div>
     
@@ -58,55 +58,44 @@ async function scanPhone() {
   resultDiv.innerHTML = '<div class="text-center text-green-400 mt-4 animate-pulse"><i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Parsing Number...</div>';
 
   try {
-    // 1. Inbuilt Parsing using libphonenumber-js
-    const phoneNumber = libphonenumber.parsePhoneNumber(input);
+    // Parse number using libphonenumber-js
+    const phoneNumber = libphonenumber.parsePhoneNumberFromString(input);
     
-    if (!phoneNumber.isValid()) throw new Error('Invalid phone number format.');
+    if (!phoneNumber || !phoneNumber.isValid()) {
+      throw new Error('Invalid phone number format or country code.');
+    }
 
     const country = phoneNumber.country || 'Unknown';
-    const carrier = phoneNumber.getCarrier() || 'Unknown';
     const type = phoneNumber.getType() || 'Unknown';
     const intlFormat = phoneNumber.formatInternational();
     const nationalFormat = phoneNumber.formatNational();
-
-    // 2. Try Carrier Lookup via free API (omkar.cloud)
-    let apiCarrier = carrier;
-    let apiType = type;
-    try {
-      const res = await fetch(`https://carrier-lookup-api.omkar.cloud/lookup?phone=${encodeURIComponent(intlFormat)}`);
-      if (res.ok) {
-        const data = await res.json();
-        apiCarrier = data.carrier || apiCarrier;
-        apiType = data.line_type || apiType;
-      }
-    } catch (e) {
-      // Fallback to offline data if API fails
-    }
-
+    
+    // NOTE: Carrier lookup is not available in the offline free version of libphonenumber-js.
+    // We provide the maximum possible data without requiring paid API keys.
+    
     resultDiv.innerHTML = `
       <div class="bg-slate-900/80 rounded-xl p-6 border border-slate-700 fade-in">
         <h3 class="text-green-400 font-bold mb-4 flex items-center gap-2"><i class="fa-solid fa-circle-check"></i> Valid Number</h3>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div class="bg-slate-800 p-4 rounded-lg border border-slate-700">
-            <p class="text-xs text-slate-400 uppercase">Formatted</p>
-            <p class="text-white font-medium font-mono">${intlFormat}</p>
+            <p class="text-xs text-slate-400 uppercase">International Format</p>
+            <p class="text-white font-medium font-mono text-lg">${intlFormat}</p>
           </div>
           <div class="bg-slate-800 p-4 rounded-lg border border-slate-700">
-            <p class="text-xs text-slate-400 uppercase">Country</p>
+            <p class="text-xs text-slate-400 uppercase">National Format</p>
+            <p class="text-white font-medium font-mono text-lg">${nationalFormat}</p>
+          </div>
+          <div class="bg-slate-800 p-4 rounded-lg border border-slate-700">
+            <p class="text-xs text-slate-400 uppercase">Country Code</p>
             <p class="text-white font-medium">${country}</p>
           </div>
           <div class="bg-slate-800 p-4 rounded-lg border border-slate-700">
-            <p class="text-xs text-slate-400 uppercase">Carrier</p>
-            <p class="text-white font-medium">${apiCarrier}</p>
-          </div>
-          <div class="bg-slate-800 p-4 rounded-lg border border-slate-700">
             <p class="text-xs text-slate-400 uppercase">Line Type</p>
-            <p class="text-white font-medium capitalize">${apiType}</p>
+            <p class="text-white font-medium capitalize">${type}</p>
           </div>
-          <div class="bg-slate-800 p-4 rounded-lg border border-slate-700 md:col-span-2">
-            <p class="text-xs text-slate-400 uppercase">National Format</p>
-            <p class="text-white font-medium font-mono">${nationalFormat}</p>
-          </div>
+        </div>
+        <div class="mt-4 bg-slate-800/50 p-3 rounded-lg border border-slate-700">
+            <p class="text-xs text-slate-400">Carrier information requires real-time telecom APIs which are paid. However, you can verify WhatsApp availability using the formatted number.</p>
         </div>
       </div>
     `;
@@ -192,7 +181,7 @@ async function scanPhoto(input) {
 }
 
 // ==========================================
-// 3. INBUILT EMAIL MODULE (HackMyIP API - CORS Enabled)
+// 3. INBUILT EMAIL MODULE (HackMyIP API)
 // ==========================================
 function renderEmailModule() {
   moduleContent.innerHTML = `
@@ -223,7 +212,6 @@ async function scanEmail() {
   resultDiv.innerHTML = '<div class="text-center text-blue-400 mt-4 animate-pulse"><i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Scanning Breaches...</div>';
   
   try {
-    // HackMyIP API - Free, no key, CORS enabled
     const res = await fetch(`https://hackmyip.com/api/breach?email=${encodeURIComponent(email)}`);
     if (!res.ok) throw new Error('API limit reached or invalid email.');
     
@@ -248,33 +236,12 @@ async function scanEmail() {
       `;
     }
   } catch (err) {
-    // Fallback to XposedOrNot if HackMyIP fails
-    try {
-      const res = await fetch(`https://api.xposedornot.com/v1/check-email/${encodeURIComponent(email)}`);
-      if (!res.ok) throw new Error('No breaches found or API limit.');
-      const data = await res.json();
-      
-      if (data.breaches && data.breaches.length > 0) {
-         resultDiv.innerHTML = `
-          <div class="bg-red-900/20 border border-red-500/50 rounded-xl p-6 fade-in">
-            <h3 class="text-red-400 font-bold mb-2"><i class="fa-solid fa-triangle-exclamation"></i> Compromised (XposedOrNot)</h3>
-            <p class="text-white text-sm mb-4">Found in <strong>${data.breaches.length}</strong> breaches.</p>
-            <div class="flex flex-wrap gap-2">
-              ${data.breaches.map(b => `<span class="bg-red-500/20 text-red-300 px-3 py-1 rounded-full text-xs border border-red-500/30">${b}</span>`).join('')}
-            </div>
-          </div>
-        `;
-      } else {
-         resultDiv.innerHTML = `<div class="text-green-400 mt-4 bg-green-900/20 p-4 rounded-xl border border-green-500/50">No breaches found.</div>`;
-      }
-    } catch (err2) {
-      resultDiv.innerHTML = `<div class="text-red-400 mt-4 bg-red-900/20 p-4 rounded-xl border border-red-500/50">Error: ${err.message}</div>`;
-    }
+    resultDiv.innerHTML = `<div class="text-red-400 mt-4 bg-red-900/20 p-4 rounded-xl border border-red-500/50">Error: ${err.message}</div>`;
   }
 }
 
 // ==========================================
-// 4. INBUILT IP MODULE (ipwho.is - CORS Enabled)
+// 4. INBUILT IP MODULE (MAX DATA via ipwho.is)
 // ==========================================
 function renderIPModule() {
   moduleContent.innerHTML = `
@@ -284,7 +251,7 @@ function renderIPModule() {
       </div>
       <div>
         <h2 class="text-2xl font-bold text-white">IP Address Lookup</h2>
-        <p class="text-sm text-slate-400">Geolocate any IP address, fetch ISP and timezone.</p>
+        <p class="text-sm text-slate-400">Extract full geolocation, ISP, and network details.</p>
       </div>
     </div>
     
@@ -305,20 +272,48 @@ async function scanIP() {
   resultDiv.innerHTML = '<div class="text-center text-orange-400 mt-4 animate-pulse"><i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Locating IP...</div>';
   
   try {
-    // ipwho.is - Free, no key, CORS enabled
     const res = await fetch(`https://ipwho.is/${ip}`);
     const data = await res.json();
     
     if (!data.success) throw new Error(data.message || 'Invalid IP');
     
+    // Extracting Maximum Details Available
     resultDiv.innerHTML = `
       <div class="bg-slate-900/80 rounded-xl p-6 border border-slate-700 fade-in">
-        <h3 class="text-orange-400 font-bold mb-4 flex items-center gap-2"><i class="fa-solid fa-location-dot"></i> Location Data</h3>
+        <h3 class="text-orange-400 font-bold mb-4 flex items-center gap-2"><i class="fa-solid fa-location-dot"></i> Deep IP Intelligence</h3>
+        
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div class="bg-slate-800 p-4 rounded-lg border border-slate-700"><p class="text-xs text-slate-400 uppercase">City / Region</p><p class="text-white font-medium">${data.city || 'N/A'}, ${data.region || 'N/A'}</p></div>
-          <div class="bg-slate-800 p-4 rounded-lg border border-slate-700"><p class="text-xs text-slate-400 uppercase">Country</p><p class="text-white font-medium">${data.country || 'N/A'}</p></div>
-          <div class="bg-slate-800 p-4 rounded-lg border border-slate-700"><p class="text-xs text-slate-400 uppercase">ISP / Organization</p><p class="text-white font-medium">${data.connection?.isp || 'N/A'}</p></div>
-          <div class="bg-slate-800 p-4 rounded-lg border border-slate-700"><p class="text-xs text-slate-400 uppercase">Timezone</p><p class="text-white font-medium">${data.timezone?.id || 'N/A'}</p></div>
+          <div class="bg-slate-800 p-4 rounded-lg border border-slate-700">
+            <p class="text-xs text-slate-400 uppercase">IP Address</p>
+            <p class="text-white font-medium font-mono text-lg">${data.ip}</p>
+            <p class="text-xs text-slate-400 mt-1">Type: ${data.type}</p>
+          </div>
+          
+          <div class="bg-slate-800 p-4 rounded-lg border border-slate-700">
+            <p class="text-xs text-slate-400 uppercase">Location</p>
+            <p class="text-white font-medium">${data.city || 'N/A'}, ${data.region || 'N/A'}</p>
+            <p class="text-slate-400 text-sm">${data.country || 'N/A'} (${data.country_code || 'N/A'})</p>
+          </div>
+          
+          <div class="bg-slate-800 p-4 rounded-lg border border-slate-700">
+            <p class="text-xs text-slate-400 uppercase">Coordinates</p>
+            <p class="text-white font-medium font-mono">Lat: ${data.latitude} <br> Lon: ${data.longitude}</p>
+          </div>
+          
+          <div class="bg-slate-800 p-4 rounded-lg border border-slate-700">
+            <p class="text-xs text-slate-400 uppercase">Timezone</p>
+            <p class="text-white font-medium">${data.timezone?.id || 'N/A'}</p>
+            <p class="text-slate-400 text-sm">UTC: ${data.timezone?.utc || 'N/A'}</p>
+          </div>
+
+          <div class="bg-slate-800 p-4 rounded-lg border border-slate-700 md:col-span-2">
+            <p class="text-xs text-slate-400 uppercase mb-2">Network / ISP Details</p>
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
+                <div><span class="text-slate-400 text-xs">ISP:</span> <span class="text-white text-sm">${data.connection?.isp || 'N/A'}</span></div>
+                <div><span class="text-slate-400 text-xs">Organization:</span> <span class="text-white text-sm">${data.connection?.org || 'N/A'}</span></div>
+                <div><span class="text-slate-400 text-xs">ASN:</span> <span class="text-white text-sm font-mono">${data.connection?.asn || 'N/A'}</span></div>
+            </div>
+          </div>
         </div>
       </div>
     `;
@@ -385,4 +380,4 @@ async function scanUsername() {
   } catch (err) {
     resultDiv.innerHTML = `<div class="text-red-400 mt-4 bg-red-900/20 p-4 rounded-xl border border-red-500/50">Error: ${err.message}</div>`;
   }
-}
+                                                   }
