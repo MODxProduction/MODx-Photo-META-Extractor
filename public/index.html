@@ -8,8 +8,9 @@
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   
-  <!-- Libraries for Inbuilt Processing -->
+  <!-- EXIF Library -->
   <script src="https://cdn.jsdelivr.net/npm/exifr@7.1.3/dist/full.umd.js"></script>
+  <!-- Phone Number Parsing Library (Max version for full data) -->
   <script src="https://cdn.jsdelivr.net/npm/libphonenumber-js@1.10.44/bundle/libphonenumber-max.js"></script>
   
   <style>
@@ -81,43 +82,48 @@
         </span>
       </h1>
       <p class="text-slate-400 max-w-2xl mx-auto text-base md:text-lg">
-        A fully inbuilt OSINT platform. Extract metadata, investigate phone numbers, check email breaches, and uncover digital footprints — all inside the app.
+        A fully inbuilt OSINT platform. Extract metadata, investigate phone numbers, check email breaches, and uncover IP footprints — all inside the app.
       </p>
     </section>
 
     <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <!-- Phone -->
       <div onclick="openModule('phone')" class="module-card bg-slate-900/50 rounded-2xl p-6 cursor-pointer slide-up group">
         <div class="w-12 h-12 rounded-xl bg-green-500/10 border border-green-500/20 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
           <i class="fa-solid fa-phone text-green-400 text-xl"></i>
         </div>
         <h3 class="text-lg font-bold text-white mb-2">Phone Number Intel</h3>
-        <p class="text-sm text-slate-400">Parse, validate and get carrier info for global numbers directly inside the app.</p>
+        <p class="text-sm text-slate-400">Inbuilt parsing & validation (Carrier, Type, Region).</p>
       </div>
 
+      <!-- Photo -->
       <div onclick="openModule('photo')" class="module-card bg-slate-900/50 rounded-2xl p-6 cursor-pointer slide-up group" style="animation-delay: 0.1s">
         <div class="w-12 h-12 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
           <i class="fa-solid fa-camera text-purple-400 text-xl"></i>
         </div>
         <h3 class="text-lg font-bold text-white mb-2">Photo EXIF Extractor</h3>
-        <p class="text-sm text-slate-400">Extract camera model, GPS, settings, and raw metadata locally.</p>
+        <p class="text-sm text-slate-400">Extract camera model, GPS, settings, and raw metadata.</p>
       </div>
 
+      <!-- Email -->
       <div onclick="openModule('email')" class="module-card bg-slate-900/50 rounded-2xl p-6 cursor-pointer slide-up group" style="animation-delay: 0.2s">
         <div class="w-12 h-12 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
           <i class="fa-solid fa-envelope text-blue-400 text-xl"></i>
         </div>
         <h3 class="text-lg font-bold text-white mb-2">Email Breach Check</h3>
-        <p class="text-sm text-slate-400">Check if an email address has been exposed in known data breaches.</p>
+        <p class="text-sm text-slate-400">Check if an email has been compromised in known breaches.</p>
       </div>
 
+      <!-- IP -->
       <div onclick="openModule('ip')" class="module-card bg-slate-900/50 rounded-2xl p-6 cursor-pointer slide-up group" style="animation-delay: 0.3s">
         <div class="w-12 h-12 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
           <i class="fa-solid fa-network-wired text-orange-400 text-xl"></i>
         </div>
         <h3 class="text-lg font-bold text-white mb-2">IP Address Lookup</h3>
-        <p class="text-sm text-slate-400">Geolocate any IP address — get city, ISP, timezone and more.</p>
+        <p class="text-sm text-slate-400">Geolocate any IP — City, ISP, Timezone, ASN & more.</p>
       </div>
 
+      <!-- Username -->
       <div onclick="openModule('username')" class="module-card bg-slate-900/50 rounded-2xl p-6 cursor-pointer slide-up group" style="animation-delay: 0.4s">
         <div class="w-12 h-12 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
           <i class="fa-solid fa-user-secret text-cyan-400 text-xl"></i>
