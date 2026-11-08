@@ -1,11 +1,10 @@
 /* ============================================================
-   MODx OSINT - Core Logic
+   MODx OSINT - Core Logic (Fully Fixed & High Contrast)
    ============================================================ */
 
 const homePage = document.getElementById('homePage');
 const modulePage = document.getElementById('modulePage');
 const moduleContent = document.getElementById('moduleContent');
-const toolDirectory = document.getElementById('toolDirectory');
 
 // ==========================================
 // NAVIGATION
@@ -24,116 +23,97 @@ function openModule(type) {
   switch(type) {
     case 'phone': renderPhoneModule(); break;
     case 'photo': renderPhotoModule(); break;
-    case 'instagram': renderInstagramModule(); break;
     case 'email': renderEmailModule(); break;
     case 'ip': renderIPModule(); break;
     case 'username': renderUsernameModule(); break;
+    case 'tools': renderToolsModule(); break;
   }
 }
 
 // ==========================================
-// TOOLS DIRECTORY
-// ==========================================
-const TOOLS = [
-  { name: 'Sherlock', desc: 'Hunt usernames across 400+ sites.', url: 'https://sherlock-project.github.io/' },
-  { name: 'PhoneInfoga', desc: 'Advanced phone number OSINT.', url: 'https://github.com/sundowndev/phoneinfoga' },
-  { name: 'Holehe', desc: 'Check which sites an email is registered on.', url: 'https://github.com/megadose/holehe' },
-  { name: 'Picuki', desc: 'View Instagram profiles anonymously.', url: 'https://www.picuki.com/' },
-  { name: 'Yandex Images', desc: 'Reverse image search for faces and places.', url: 'https://yandex.com/images/' },
-  { name: 'Shodan', desc: 'Search engine for IoT devices.', url: 'https://www.shodan.io/' },
-  { name: 'HaveIBeenPwned', desc: 'Check email breaches.', url: 'https://haveibeenpwned.com/' },
-  { name: 'ViewDNS', desc: 'DNS and IP history tools.', url: 'https://viewdns.info/' }
-];
-
-function renderTools() {
-  toolDirectory.innerHTML = TOOLS.map(tool => `
-    <a href="${tool.url}" target="_blank" class="block bg-slate-800/50 border border-slate-700 rounded-xl p-4 hover:border-purple-500 transition-colors group">
-      <h4 class="font-bold text-white group-hover:text-purple-400 transition-colors mb-1">${tool.name} <i class="fa-solid fa-arrow-up-right-from-square text-xs ml-1"></i></h4>
-      <p class="text-xs text-slate-400">${tool.desc}</p>
-    </a>
-  `).join('');
-}
-
-// ==========================================
-// 1. PHONE MODULE (randomapi.dev)
+// 1. PHONE MODULE (Formatted & OSINT Links)
 // ==========================================
 function renderPhoneModule() {
   moduleContent.innerHTML = `
-    <div class="flex items-center gap-3 mb-6">
-      <div class="w-10 h-10 rounded-lg bg-green-500/20 flex items-center justify-center"><i class="fa-solid fa-phone text-green-400"></i></div>
-      <h2 class="text-2xl font-bold text-white">Phone Number Intel</h2>
+    <div class="flex items-center gap-4 mb-6 border-b border-slate-700 pb-4">
+      <div class="w-12 h-12 rounded-xl bg-green-500/10 border border-green-500/20 flex items-center justify-center">
+        <i class="fa-solid fa-phone text-green-400 text-xl"></i>
+      </div>
+      <div>
+        <h2 class="text-2xl font-bold text-white">Phone Number Intel</h2>
+        <p class="text-sm text-slate-400">Format your target number and generate direct OSINT search links.</p>
+      </div>
     </div>
-    <p class="text-slate-400 mb-6 text-sm">Enter number in international format. Example: <span class="text-green-400 font-mono">+91 9876543210</span> or <span class="text-green-400 font-mono">+1 2025550143</span></p>
     
-    <div class="flex gap-2">
-      <input type="tel" id="phoneInput" placeholder="+91 98765 43210" class="flex-1 bg-slate-900 border border-slate-700 rounded-xl py-3 px-4 text-white font-mono focus:outline-none focus:border-green-500 transition-colors">
-      <button onclick="scanPhone()" class="bg-green-600 hover:bg-green-500 text-white px-6 rounded-xl font-bold transition-colors">Scan</button>
+    <div class="flex flex-col md:flex-row gap-3 mb-6">
+      <input type="tel" id="phoneInput" placeholder="+91 9876543210" class="flex-1 bg-[#0B0F19] border border-slate-600 rounded-xl py-3 px-4 text-white font-mono placeholder-slate-500 focus:border-green-500">
+      <button onclick="scanPhone()" class="bg-green-600 hover:bg-green-500 text-white px-8 py-3 rounded-xl font-bold transition-all shadow-lg shadow-green-900/30">Analyze</button>
     </div>
     <div id="phoneResult" class="mt-6"></div>
   `;
 }
 
-async function scanPhone() {
+function scanPhone() {
   const input = document.getElementById('phoneInput').value.trim();
   const resultDiv = document.getElementById('phoneResult');
   
   if (!input) return alert('Please enter a phone number.');
   
-  // Format: ensure single space after country code if user typed without it
-  let formatted = input.replace(/(\+\d+)\s*/, '$1 ');
-  
-  resultDiv.innerHTML = '<div class="spinner mx-auto mt-4"></div>';
-  
-  try {
-    // RandomAPI.dev - Free, No Key, CORS enabled
-    const res = await fetch(`https://randomapi.dev/api/phone-numbers/parse?value=${encodeURIComponent(formatted)}`);
-    const data = await res.json();
-    
-    if (data.error) throw new Error(data.error);
-    
-    const info = data.data || data;
-    
-    resultDiv.innerHTML = `
-      <div class="bg-slate-900 rounded-xl p-6 border border-slate-700 fade-in">
-        <h3 class="text-green-400 font-bold mb-4 font-mono"><i class="fa-solid fa-circle-check"></i> Valid Number</h3>
-        <div class="grid grid-cols-2 gap-4">
-          <div class="bg-slate-800 p-3 rounded-lg">
-            <p class="text-xs text-slate-500">Formatted</p>
-            <p class="text-white font-mono">${info.internationalFormat || formatted}</p>
-          </div>
-          <div class="bg-slate-800 p-3 rounded-lg">
-            <p class="text-xs text-slate-500">Country</p>
-            <p class="text-white font-mono">${info.countryCode || 'N/A'}</p>
-          </div>
-          <div class="bg-slate-800 p-3 rounded-lg">
-            <p class="text-xs text-slate-500">Type</p>
-            <p class="text-white font-mono">${info.numberType || 'N/A'}</p>
-          </div>
-          <div class="bg-slate-800 p-3 rounded-lg">
-            <p class="text-xs text-slate-500">Carrier</p>
-            <p class="text-white font-mono">${info.carrier || 'N/A'}</p>
-          </div>
+  // Clean and Format: ensure +XX XXXXXXX
+  let clean = input.replace(/[^\d+]/g, ''); 
+  if(clean.length > 5) {
+    // Basic formatting for display
+    const match = clean.match(/^(\+\d{1,3})(\d+)$/);
+    if(match) clean = match[1] + ' ' + match[2];
+  }
+
+  resultDiv.innerHTML = `
+    <div class="bg-slate-900/80 rounded-xl p-6 border border-slate-700 fade-in">
+      <div class="flex items-center gap-3 mb-6">
+        <i class="fa-solid fa-circle-check text-green-500 text-xl"></i>
+        <h3 class="text-lg font-bold text-white font-mono">${clean}</h3>
+      </div>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <div class="bg-slate-800 p-4 rounded-lg border border-slate-700">
+          <p class="text-xs text-slate-400 font-semibold mb-1 uppercase tracking-wider">Target OSINT Actions</p>
+          <p class="text-sm text-slate-300">Since free APIs rarely provide carrier data for all countries, use these direct links to perform deep OSINT:</p>
+        </div>
+        <div class="flex flex-col gap-2 justify-center">
+          <a href="https://www.truecaller.com/search/global/${clean.replace(/\s/g, '')}" target="_blank" class="w-full text-center bg-blue-600 hover:bg-blue-500 text-white py-2 rounded-lg font-medium transition-colors text-sm">
+            <i class="fa-solid fa-address-book"></i> Search on Truecaller
+          </a>
+          <a href="https://www.google.com/search?q=%22${clean}%22" target="_blank" class="w-full text-center bg-slate-700 hover:bg-slate-600 text-white py-2 rounded-lg font-medium transition-colors text-sm">
+            <i class="fa-brands fa-google"></i> Google Dork Search
+          </a>
+          <a href="https://wa.me/${clean.replace(/\s/g, '')}" target="_blank" class="w-full text-center bg-green-700 hover:bg-green-600 text-white py-2 rounded-lg font-medium transition-colors text-sm">
+            <i class="fa-brands fa-whatsapp"></i> Check WhatsApp
+          </a>
         </div>
       </div>
-    `;
-  } catch (err) {
-    resultDiv.innerHTML = `<div class="text-red-400 text-sm mt-4">Error: ${err.message}</div>`;
-  }
+    </div>
+  `;
 }
 
 // ==========================================
-// 2. PHOTO EXIF MODULE
+// 2. PHOTO MODULE (EXIF)
 // ==========================================
 function renderPhotoModule() {
   moduleContent.innerHTML = `
-    <div class="flex items-center gap-3 mb-6">
-      <div class="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center"><i class="fa-solid fa-camera text-purple-400"></i></div>
-      <h2 class="text-2xl font-bold text-white">Photo EXIF Extractor</h2>
+    <div class="flex items-center gap-4 mb-6 border-b border-slate-700 pb-4">
+      <div class="w-12 h-12 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center">
+        <i class="fa-solid fa-camera text-purple-400 text-xl"></i>
+      </div>
+      <div>
+        <h2 class="text-2xl font-bold text-white">Photo EXIF Extractor</h2>
+        <p class="text-sm text-slate-400">Upload a photo to extract GPS, camera details, and raw metadata.</p>
+      </div>
     </div>
     
-    <div class="border-2 border-dashed border-slate-600 rounded-xl p-8 text-center cursor-pointer hover:border-purple-500 transition-colors" onclick="document.getElementById('photoInput').click()">
-      <i class="fa-solid fa-cloud-arrow-up text-3xl text-purple-500 mb-3"></i>
-      <p class="text-slate-300 font-semibold">Click to upload a photo</p>
+    <div class="border-2 border-dashed border-slate-600 rounded-xl p-10 text-center cursor-pointer hover:border-purple-500 hover:bg-purple-500/5 transition-all" onclick="document.getElementById('photoInput').click()">
+      <i class="fa-solid fa-cloud-arrow-up text-4xl text-purple-500 mb-4"></i>
+      <p class="text-white font-semibold mb-1">Click to upload target image</p>
+      <p class="text-xs text-slate-400">JPG, PNG, WEBP, HEIC</p>
       <input type="file" id="photoInput" class="hidden" accept="image/*" onchange="scanPhoto(this)">
     </div>
     <div id="photoResult" class="mt-6"></div>
@@ -145,114 +125,70 @@ async function scanPhoto(input) {
   if (!file) return;
   
   const resultDiv = document.getElementById('photoResult');
-  resultDiv.innerHTML = '<div class="spinner mx-auto mt-4"></div>';
+  resultDiv.innerHTML = '<div class="text-center text-purple-400 mt-4 animate-pulse"><i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Extracting Metadata...</div>';
   
   try {
     const md = await exifr.parse(file, true) || {};
     
-    const make = md.Make || 'Unknown';
-    const model = md.Model || 'Unknown';
-    const gps = (md.latitude && md.longitude) ? `${md.latitude.toFixed(5)}, ${md.longitude.toFixed(5)}` : 'Not Found';
-    const date = md.DateTimeOriginal || md.CreateDate || 'Unknown';
-    
     if(Object.keys(md).length < 3) {
-      resultDiv.innerHTML = '<div class="text-yellow-400 mt-4">No EXIF data found. This may be a screenshot or stripped image.</div>';
+      resultDiv.innerHTML = `<div class="bg-yellow-900/30 border border-yellow-500/50 text-yellow-400 p-4 rounded-xl mt-4 text-sm fade-in"><i class="fa-solid fa-triangle-exclamation"></i> No EXIF data found. This image has likely been stripped (screenshot or social media download).</div>`;
       return;
     }
     
+    const make = md.Make || 'Unknown';
+    const model = md.Model || 'Unknown';
+    const gps = (md.latitude && md.longitude) ? `${md.latitude.toFixed(6)}, ${md.longitude.toFixed(6)}` : 'Not Found';
+    const date = md.DateTimeOriginal || md.CreateDate || 'Unknown';
+    
     resultDiv.innerHTML = `
-      <div class="bg-slate-900 rounded-xl p-6 border border-slate-700 fade-in">
-        <h3 class="text-purple-400 font-bold mb-4"><i class="fa-regular fa-image"></i> Metadata Found</h3>
-        <div class="grid grid-cols-2 gap-4 mb-4">
-          <div class="bg-slate-800 p-3 rounded-lg"><p class="text-xs text-slate-500">Device</p><p class="text-white text-sm">${make} ${model}</p></div>
-          <div class="bg-slate-800 p-3 rounded-lg"><p class="text-xs text-slate-500">Date</p><p class="text-white text-sm">${date}</p></div>
-          <div class="bg-slate-800 p-3 rounded-lg col-span-2"><p class="text-xs text-slate-500">GPS</p><p class="text-white text-sm font-mono">${gps}</p></div>
+      <div class="bg-slate-900/80 rounded-xl p-6 border border-slate-700 fade-in">
+        <h3 class="text-purple-400 font-bold mb-4 flex items-center gap-2"><i class="fa-solid fa-circle-check"></i> Metadata Extracted</h3>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          <div class="bg-slate-800 p-4 rounded-lg border border-slate-700">
+            <p class="text-xs text-slate-400 uppercase">Device</p>
+            <p class="text-white font-medium">${make} ${model}</p>
+          </div>
+          <div class="bg-slate-800 p-4 rounded-lg border border-slate-700">
+            <p class="text-xs text-slate-400 uppercase">Date Taken</p>
+            <p class="text-white font-medium">${date}</p>
+          </div>
+          <div class="bg-slate-800 p-4 rounded-lg border border-slate-700 md:col-span-2">
+            <p class="text-xs text-slate-400 uppercase">GPS Location</p>
+            <p class="text-white font-medium font-mono">${gps}</p>
+            ${md.latitude ? `<a href="https://www.google.com/maps?q=${md.latitude},${md.longitude}" target="_blank" class="text-xs text-blue-400 hover:underline mt-1 inline-block"><i class="fa-solid fa-map-location-dot"></i> Open in Maps</a>` : ''}
+          </div>
         </div>
-        <details class="mt-4">
-          <summary class="cursor-pointer text-sm text-slate-400 hover:text-white">View Raw JSON</summary>
-          <pre class="mt-2 bg-black/50 p-4 rounded-lg text-xs font-mono text-green-400 overflow-auto max-h-60">${JSON.stringify(md, null, 2)}</pre>
+
+        <details class="bg-[#0B0F19] rounded-lg border border-slate-700 overflow-hidden">
+          <summary class="cursor-pointer p-3 text-sm text-slate-300 font-mono hover:text-white"><i class="fa-solid fa-code"></i> View Raw JSON Payload</summary>
+          <pre class="p-4 text-xs font-mono text-green-400 overflow-auto max-h-60 border-t border-slate-700">${JSON.stringify(md, null, 2)}</pre>
         </details>
       </div>
     `;
   } catch (err) {
-    resultDiv.innerHTML = `<div class="text-red-400 mt-4">Error: ${err.message}</div>`;
+    resultDiv.innerHTML = `<div class="text-red-400 mt-4 bg-red-900/20 p-4 rounded-xl border border-red-500/50">Error: ${err.message}</div>`;
   }
 }
 
 // ==========================================
-// 3. INSTAGRAM MODULE (Private API via CORS proxy)
-// ==========================================
-function renderInstagramModule() {
-  moduleContent.innerHTML = `
-    <div class="flex items-center gap-3 mb-6">
-      <div class="w-10 h-10 rounded-lg bg-pink-500/20 flex items-center justify-center"><i class="fa-brands fa-instagram text-pink-400"></i></div>
-      <h2 class="text-2xl font-bold text-white">Instagram Profile Intel</h2>
-    </div>
-    <div class="flex gap-2">
-      <input type="text" id="igInput" placeholder="Enter username (without @)" class="flex-1 bg-slate-900 border border-slate-700 rounded-xl py-3 px-4 text-white font-mono focus:outline-none focus:border-pink-500 transition-colors">
-      <button onclick="scanInstagram()" class="bg-pink-600 hover:bg-pink-500 text-white px-6 rounded-xl font-bold transition-colors">Scan</button>
-    </div>
-    <div id="igResult" class="mt-6"></div>
-  `;
-}
-
-async function scanInstagram() {
-  const username = document.getElementById('igInput').value.trim().replace('@', '');
-  const resultDiv = document.getElementById('igResult');
-  
-  if (!username) return alert('Please enter an Instagram username.');
-  
-  resultDiv.innerHTML = '<div class="spinner mx-auto mt-4"></div>';
-  
-  try {
-    // Use private API endpoint via CORS proxy
-    const targetUrl = `https://i.instagram.com/api/v1/users/web_profile_info/?username=${username}`;
-    const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`;
-    
-    const res = await fetch(proxyUrl, {
-      headers: {
-        'User-Agent': 'Instagram 219.0.0.12.117 Android'
-      }
-    });
-    
-    if (!res.ok) throw new Error('Profile not found or private.');
-    
-    const data = await res.json();
-    const user = data.data?.user;
-    
-    if (!user) throw new Error('Could not parse profile data.');
-    
-    resultDiv.innerHTML = `
-      <div class="bg-slate-900 rounded-xl p-6 border border-slate-700 fade-in flex flex-col md:flex-row gap-6 items-center">
-        <img src="${user.profile_pic_url_hd || user.profile_pic_url}" class="w-24 h-24 rounded-full border-4 border-pink-500">
-        <div class="flex-1 text-center md:text-left">
-          <h3 class="text-xl font-bold text-white">${user.full_name || user.username}</h3>
-          <p class="text-pink-400 font-mono text-sm">@${user.username}</p>
-          <p class="text-slate-400 text-sm mt-2">${user.biography || 'No bio available.'}</p>
-          <div class="flex gap-4 justify-center md:justify-start mt-3 text-sm">
-            <span><strong class="text-white">${user.edge_followed_by?.count || 0}</strong> <span class="text-slate-500">Followers</span></span>
-            <span><strong class="text-white">${user.edge_owner_to_timeline_media?.count || 0}</strong> <span class="text-slate-500">Posts</span></span>
-          </div>
-        </div>
-      </div>
-    `;
-  } catch (err) {
-    resultDiv.innerHTML = `<div class="text-red-400 text-sm mt-4">Error: ${err.message}. The profile may be private or the API is temporarily rate-limited.</div>`;
-  }
-}
-
-// ==========================================
-// 4. EMAIL MODULE (HackMyIP Breach Check)
+// 3. EMAIL MODULE (XposedOrNot API)
 // ==========================================
 function renderEmailModule() {
   moduleContent.innerHTML = `
-    <div class="flex items-center gap-3 mb-6">
-      <div class="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center"><i class="fa-solid fa-envelope text-blue-400"></i></div>
-      <h2 class="text-2xl font-bold text-white">Email Breach Check</h2>
+    <div class="flex items-center gap-4 mb-6 border-b border-slate-700 pb-4">
+      <div class="w-12 h-12 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
+        <i class="fa-solid fa-envelope text-blue-400 text-xl"></i>
+      </div>
+      <div>
+        <h2 class="text-2xl font-bold text-white">Email Breach Check</h2>
+        <p class="text-sm text-slate-400">Check if an email address has been compromised in a data breach.</p>
+      </div>
     </div>
-    <div class="flex gap-2">
-      <input type="email" id="emailInput" placeholder="target@example.com" class="flex-1 bg-slate-900 border border-slate-700 rounded-xl py-3 px-4 text-white font-mono focus:outline-none focus:border-blue-500 transition-colors">
-      <button onclick="scanEmail()" class="bg-blue-600 hover:bg-blue-500 text-white px-6 rounded-xl font-bold transition-colors">Check</button>
+    
+    <div class="flex flex-col md:flex-row gap-3 mb-6">
+      <input type="email" id="emailInput" placeholder="target@example.com" class="flex-1 bg-[#0B0F19] border border-slate-600 rounded-xl py-3 px-4 text-white font-mono placeholder-slate-500 focus:border-blue-500">
+      <button onclick="scanEmail()" class="bg-blue-600 hover:bg-blue-500 text-white px-8 py-3 rounded-xl font-bold transition-all shadow-lg shadow-blue-900/30">Check</button>
     </div>
     <div id="emailResult" class="mt-6"></div>
   `;
@@ -264,48 +200,60 @@ async function scanEmail() {
   
   if (!email) return alert('Please enter an email address.');
   
-  resultDiv.innerHTML = '<div class="spinner mx-auto mt-4"></div>';
+  resultDiv.innerHTML = '<div class="text-center text-blue-400 mt-4 animate-pulse"><i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Scanning Breaches...</div>';
   
   try {
-    // HackMyIP - Free, No Key, CORS enabled
-    const res = await fetch(`https://hackmyip.com/api/breach?email=${encodeURIComponent(email)}`);
+    // XposedOrNot API - Free, reliable, no key needed
+    const res = await fetch(`https://api.xposedornot.com/v1/check-email/${encodeURIComponent(email)}`);
+    
+    if (res.status === 404) {
+      resultDiv.innerHTML = `
+        <div class="bg-green-900/20 border border-green-500/50 rounded-xl p-6 fade-in">
+          <h3 class="text-green-400 font-bold mb-2 flex items-center gap-2"><i class="fa-solid fa-shield-check"></i> No Breaches Found</h3>
+          <p class="text-slate-300 text-sm">Good news! This email was not found in any known public data breaches.</p>
+        </div>
+      `;
+      return;
+    }
+    
     const data = await res.json();
     
-    if (data.breached) {
+    if (data.breaches && data.breaches.length > 0) {
       resultDiv.innerHTML = `
-        <div class="bg-red-900/30 border border-red-500/50 rounded-xl p-6 fade-in">
-          <h3 class="text-red-400 font-bold mb-2"><i class="fa-solid fa-triangle-exclamation"></i> Breached!</h3>
-          <p class="text-white text-sm">This email was found in <strong>${data.count || 'multiple'}</strong> data breaches.</p>
-          <ul class="mt-3 text-xs text-slate-400 list-disc pl-5">
-            ${(data.breaches || []).slice(0, 5).map(b => `<li>${b.name || b}</li>`).join('')}
-          </ul>
+        <div class="bg-red-900/20 border border-red-500/50 rounded-xl p-6 fade-in">
+          <h3 class="text-red-400 font-bold mb-2 flex items-center gap-2"><i class="fa-solid fa-triangle-exclamation"></i> Compromised!</h3>
+          <p class="text-white text-sm mb-4">This email was found in <strong>${data.breaches.length}</strong> data breaches.</p>
+          <div class="flex flex-wrap gap-2">
+            ${data.breaches.map(b => `<span class="bg-red-500/20 text-red-300 px-3 py-1 rounded-full text-xs border border-red-500/30">${b}</span>`).join('')}
+          </div>
         </div>
       `;
     } else {
-      resultDiv.innerHTML = `
-        <div class="bg-green-900/30 border border-green-500/50 rounded-xl p-6 fade-in">
-          <h3 class="text-green-400 font-bold mb-2"><i class="fa-solid fa-circle-check"></i> No Breaches Found</h3>
-          <p class="text-white text-sm">Good news! This email was not found in any known data breaches.</p>
-        </div>
-      `;
+       resultDiv.innerHTML = `<div class="text-yellow-400 mt-4">Unknown response format from API.</div>`;
     }
   } catch (err) {
-    resultDiv.innerHTML = `<div class="text-red-400 mt-4">Error: ${err.message}</div>`;
+    resultDiv.innerHTML = `<div class="text-red-400 mt-4 bg-red-900/20 p-4 rounded-xl border border-red-500/50">Error: ${err.message}</div>`;
   }
 }
 
 // ==========================================
-// 5. IP MODULE (ipwho.org)
+// 4. IP MODULE (ipapi.co)
 // ==========================================
 function renderIPModule() {
   moduleContent.innerHTML = `
-    <div class="flex items-center gap-3 mb-6">
-      <div class="w-10 h-10 rounded-lg bg-orange-500/20 flex items-center justify-center"><i class="fa-solid fa-network-wired text-orange-400"></i></div>
-      <h2 class="text-2xl font-bold text-white">IP Address Lookup</h2>
+    <div class="flex items-center gap-4 mb-6 border-b border-slate-700 pb-4">
+      <div class="w-12 h-12 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center">
+        <i class="fa-solid fa-network-wired text-orange-400 text-xl"></i>
+      </div>
+      <div>
+        <h2 class="text-2xl font-bold text-white">IP Address Lookup</h2>
+        <p class="text-sm text-slate-400">Geolocate any IP address, fetch ISP and timezone.</p>
+      </div>
     </div>
-    <div class="flex gap-2">
-      <input type="text" id="ipInput" placeholder="8.8.8.8" class="flex-1 bg-slate-900 border border-slate-700 rounded-xl py-3 px-4 text-white font-mono focus:outline-none focus:border-orange-500 transition-colors">
-      <button onclick="scanIP()" class="bg-orange-600 hover:bg-orange-500 text-white px-6 rounded-xl font-bold transition-colors">Lookup</button>
+    
+    <div class="flex flex-col md:flex-row gap-3 mb-6">
+      <input type="text" id="ipInput" placeholder="8.8.8.8" class="flex-1 bg-[#0B0F19] border border-slate-600 rounded-xl py-3 px-4 text-white font-mono placeholder-slate-500 focus:border-orange-500">
+      <button onclick="scanIP()" class="bg-orange-600 hover:bg-orange-500 text-white px-8 py-3 rounded-xl font-bold transition-all shadow-lg shadow-orange-900/30">Lookup</button>
     </div>
     <div id="ipResult" class="mt-6"></div>
   `;
@@ -317,43 +265,49 @@ async function scanIP() {
   
   if (!ip) return alert('Please enter an IP address.');
   
-  resultDiv.innerHTML = '<div class="spinner mx-auto mt-4"></div>';
+  resultDiv.innerHTML = '<div class="text-center text-orange-400 mt-4 animate-pulse"><i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Locating IP...</div>';
   
   try {
-    // ipwho.org - Free, No Key, CORS enabled
-    const res = await fetch(`https://ipwho.org/${ip}`);
+    // ipapi.co - Free, reliable, no key needed for basic info
+    const res = await fetch(`https://ipapi.co/${ip}/json/`);
     const data = await res.json();
     
-    if (data.success === false) throw new Error(data.message || 'Invalid IP');
+    if (data.error) throw new Error(data.reason || 'Invalid IP');
     
     resultDiv.innerHTML = `
-      <div class="bg-slate-900 rounded-xl p-6 border border-slate-700 fade-in">
-        <h3 class="text-orange-400 font-bold mb-4"><i class="fa-solid fa-location-dot"></i> ${ip}</h3>
-        <div class="grid grid-cols-2 gap-4">
-          <div class="bg-slate-800 p-3 rounded-lg"><p class="text-xs text-slate-500">City</p><p class="text-white text-sm">${data.city || 'N/A'}</p></div>
-          <div class="bg-slate-800 p-3 rounded-lg"><p class="text-xs text-slate-500">Country</p><p class="text-white text-sm">${data.country || 'N/A'}</p></div>
-          <div class="bg-slate-800 p-3 rounded-lg"><p class="text-xs text-slate-500">ISP</p><p class="text-white text-sm">${data.connection?.isp || 'N/A'}</p></div>
-          <div class="bg-slate-800 p-3 rounded-lg"><p class="text-xs text-slate-500">Timezone</p><p class="text-white text-sm">${data.timezone?.id || 'N/A'}</p></div>
+      <div class="bg-slate-900/80 rounded-xl p-6 border border-slate-700 fade-in">
+        <h3 class="text-orange-400 font-bold mb-4 flex items-center gap-2"><i class="fa-solid fa-location-dot"></i> Location Data</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="bg-slate-800 p-4 rounded-lg border border-slate-700"><p class="text-xs text-slate-400 uppercase">City / Region</p><p class="text-white font-medium">${data.city || 'N/A'}, ${data.region || 'N/A'}</p></div>
+          <div class="bg-slate-800 p-4 rounded-lg border border-slate-700"><p class="text-xs text-slate-400 uppercase">Country</p><p class="text-white font-medium">${data.country_name || 'N/A'}</p></div>
+          <div class="bg-slate-800 p-4 rounded-lg border border-slate-700"><p class="text-xs text-slate-400 uppercase">ISP / Organization</p><p class="text-white font-medium">${data.org || 'N/A'}</p></div>
+          <div class="bg-slate-800 p-4 rounded-lg border border-slate-700"><p class="text-xs text-slate-400 uppercase">Timezone</p><p class="text-white font-medium">${data.timezone || 'N/A'}</p></div>
         </div>
       </div>
     `;
   } catch (err) {
-    resultDiv.innerHTML = `<div class="text-red-400 mt-4">Error: ${err.message}</div>`;
+    resultDiv.innerHTML = `<div class="text-red-400 mt-4 bg-red-900/20 p-4 rounded-xl border border-red-500/50">Error: ${err.message}</div>`;
   }
 }
 
 // ==========================================
-// 6. USERNAME MODULE (GitHub + Links)
+// 5. USERNAME MODULE (GitHub)
 // ==========================================
 function renderUsernameModule() {
   moduleContent.innerHTML = `
-    <div class="flex items-center gap-3 mb-6">
-      <div class="w-10 h-10 rounded-lg bg-cyan-500/20 flex items-center justify-center"><i class="fa-solid fa-user-secret text-cyan-400"></i></div>
-      <h2 class="text-2xl font-bold text-white">Username Enumeration</h2>
+    <div class="flex items-center gap-4 mb-6 border-b border-slate-700 pb-4">
+      <div class="w-12 h-12 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center">
+        <i class="fa-solid fa-user-secret text-cyan-400 text-xl"></i>
+      </div>
+      <div>
+        <h2 class="text-2xl font-bold text-white">Username Enumeration</h2>
+        <p class="text-sm text-slate-400">Fetch public GitHub profile data instantly.</p>
+      </div>
     </div>
-    <div class="flex gap-2">
-      <input type="text" id="usernameInput" placeholder="johndoe" class="flex-1 bg-slate-900 border border-slate-700 rounded-xl py-3 px-4 text-white font-mono focus:outline-none focus:border-cyan-500 transition-colors">
-      <button onclick="scanUsername()" class="bg-cyan-600 hover:bg-cyan-500 text-white px-6 rounded-xl font-bold transition-colors">Search</button>
+    
+    <div class="flex flex-col md:flex-row gap-3 mb-6">
+      <input type="text" id="usernameInput" placeholder="johndoe" class="flex-1 bg-[#0B0F19] border border-slate-600 rounded-xl py-3 px-4 text-white font-mono placeholder-slate-500 focus:border-cyan-500">
+      <button onclick="scanUsername()" class="bg-cyan-600 hover:bg-cyan-500 text-white px-8 py-3 rounded-xl font-bold transition-all shadow-lg shadow-cyan-900/30">Search</button>
     </div>
     <div id="usernameResult" class="mt-6"></div>
   `;
@@ -365,39 +319,73 @@ async function scanUsername() {
   
   if (!username) return alert('Please enter a username.');
   
-  resultDiv.innerHTML = '<div class="spinner mx-auto mt-4"></div>';
+  resultDiv.innerHTML = '<div class="text-center text-cyan-400 mt-4 animate-pulse"><i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Searching GitHub...</div>';
   
   try {
-    // GitHub API (free, CORS enabled)
     const res = await fetch(`https://api.github.com/users/${username}`);
     
     if (!res.ok) {
-      resultDiv.innerHTML = `<div class="text-yellow-400 mt-4">Username "${username}" not found on GitHub. Try checking other platforms in the Tools directory.</div>`;
+      resultDiv.innerHTML = `<div class="text-yellow-400 mt-4 bg-yellow-900/20 p-4 rounded-xl border border-yellow-500/50">User "${username}" not found on GitHub.</div>`;
       return;
     }
     
     const data = await res.json();
     
     resultDiv.innerHTML = `
-      <div class="bg-slate-900 rounded-xl p-6 border border-slate-700 fade-in flex flex-col md:flex-row gap-6 items-center">
-        <img src="${data.avatar_url}" class="w-24 h-24 rounded-full border-4 border-cyan-500">
+      <div class="bg-slate-900/80 rounded-xl p-6 border border-slate-700 fade-in flex flex-col md:flex-row gap-6 items-center">
+        <img src="${data.avatar_url}" class="w-28 h-28 rounded-full border-4 border-cyan-500 shadow-lg shadow-cyan-500/20">
         <div class="flex-1 text-center md:text-left">
-          <h3 class="text-xl font-bold text-white">${data.name || data.login}</h3>
-          <p class="text-cyan-400 font-mono text-sm">@${data.login}</p>
-          <p class="text-slate-400 text-sm mt-2">${data.bio || 'No bio available.'}</p>
-          <div class="flex gap-4 justify-center md:justify-start mt-3 text-sm">
-            <span><strong class="text-white">${data.public_repos}</strong> <span class="text-slate-500">Repos</span></span>
-            <span><strong class="text-white">${data.followers}</strong> <span class="text-slate-500">Followers</span></span>
+          <h3 class="text-2xl font-bold text-white">${data.name || data.login}</h3>
+          <p class="text-cyan-400 font-mono text-sm mb-2">@${data.login}</p>
+          <p class="text-slate-300 text-sm mb-4">${data.bio || 'No bio available.'}</p>
+          <div class="flex gap-4 justify-center md:justify-start text-sm">
+            <div class="bg-slate-800 px-4 py-2 rounded-lg border border-slate-700"><strong class="text-white">${data.public_repos}</strong> <span class="text-slate-400">Repos</span></div>
+            <div class="bg-slate-800 px-4 py-2 rounded-lg border border-slate-700"><strong class="text-white">${data.followers}</strong> <span class="text-slate-400">Followers</span></div>
           </div>
         </div>
       </div>
     `;
   } catch (err) {
-    resultDiv.innerHTML = `<div class="text-red-400 mt-4">Error: ${err.message}</div>`;
+    resultDiv.innerHTML = `<div class="text-red-400 mt-4 bg-red-900/20 p-4 rounded-xl border border-red-500/50">Error: ${err.message}</div>`;
   }
 }
 
 // ==========================================
-// INIT
+// 6. TOOLS DIRECTORY
 // ==========================================
-renderTools();
+function renderToolsModule() {
+  const tools = [
+    { name: 'Sherlock', desc: 'Hunt usernames across 400+ sites.', url: 'https://sherlock-project.github.io/', icon: 'fa-user-secret' },
+    { name: 'PhoneInfoga', desc: 'Advanced phone number OSINT.', url: 'https://github.com/sundowndev/phoneinfoga', icon: 'fa-phone' },
+    { name: 'Holehe', desc: 'Check which sites an email is registered on.', url: 'https://github.com/megadose/holehe', icon: 'fa-envelope' },
+    { name: 'Picuki', desc: 'View Instagram profiles anonymously.', url: 'https://www.picuki.com/', icon: 'fa-instagram' },
+    { name: 'Yandex Images', desc: 'Reverse image search for faces and places.', url: 'https://yandex.com/images/', icon: 'fa-image' },
+    { name: 'Shodan', desc: 'Search engine for IoT devices.', url: 'https://www.shodan.io/', icon: 'fa-server' },
+  ];
+
+  moduleContent.innerHTML = `
+    <div class="flex items-center gap-4 mb-6 border-b border-slate-700 pb-4">
+      <div class="w-12 h-12 rounded-xl bg-pink-500/10 border border-pink-500/20 flex items-center justify-center">
+        <i class="fa-solid fa-toolbox text-pink-400 text-xl"></i>
+      </div>
+      <div>
+        <h2 class="text-2xl font-bold text-white">OSINT Arsenal</h2>
+        <p class="text-sm text-slate-400">Direct links to top external intelligence tools.</p>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      ${tools.map(tool => `
+        <a href="${tool.url}" target="_blank" class="bg-slate-800/80 border border-slate-700 rounded-xl p-4 hover:border-pink-500 hover:bg-slate-800 transition-all group flex items-start gap-4">
+          <div class="w-10 h-10 rounded-lg bg-pink-500/10 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+            <i class="fa-solid ${tool.icon} text-pink-400"></i>
+          </div>
+          <div>
+            <h4 class="font-bold text-white group-hover:text-pink-400 transition-colors">${tool.name} <i class="fa-solid fa-arrow-up-right-from-square text-xs ml-1"></i></h4>
+            <p class="text-xs text-slate-400 mt-1">${tool.desc}</p>
+          </div>
+        </a>
+      `).join('')}
+    </div>
+  `;
+}
