@@ -1,0 +1,1 @@
+# MODx-Photo-META-Extractor
